@@ -1,4 +1,9 @@
 # 动态上下文 (activeContext.md)
+## 当前所处阶段（2026-07-11 字库静态解耦改造完成）
+已完成字库静态解耦改造，补充人教版二年级上册第一、二单元高频字库数据资产。新增 `src/types/textbook.ts` 的 `TextbookCharacter` 强类型契约与 `src/data/textbooks/pep-y2-s1.ts` 独立教材资产，按单元和课名录入“两、哪、宽、顶、眼、睛、肚、皮、孩、跳、变、极、片、傍、园、孔、桥、群、队、旗、杨、壮、枫、松、柏、棉”共 26 个核心生字。
+
+`src/store/useAppStore.ts` 已彻底移除“明、赢、林”硬编码 Mock，通过明确的强类型适配边界将教材资产转为 `CharacterMeta[]` 并作为 `characterPool` 初始静态数据源；默认筛选已切换为二年级上册（`grade: '2'`、`semester: 'UP'`），现有严格筛选逻辑可直接命中第一、二单元数据。黑名单审计与 `git diff --check` 通过；`npm run build` 一次通过，Vite 处理 21 个模块，生成 CSS 23.86 kB（gzip 5.26 kB）与 JS 253.07 kB（gzip 77.56 kB），类型契合且构建体积无异常，等待人类刷新线上验收。
+
 ## 当前所处阶段（2026-07-11 产品经理出版级视觉打磨完成）
 已完成产品经理出版级视觉打磨：`src/components/PreviewContainer.tsx` 的拼音由 10px 提升至 12px 半粗体，四线三格改为更柔和的淡灰实线，并在拼音字形后加入极小白色保护底，确保放大的字母与 ā、á、ǎ、à 等声调不会被轨道线横切或遮挡。
 

@@ -14,6 +14,20 @@ export type GradeLevel = '1' | '2' | '3' | '4' | '5' | '6';
 export type SemesterType = 'UP' | 'DOWN'; // UP = 上册, DOWN = 下册
 
 /**
+ * @description 与运行时状态解耦的教材静态字库资产契约
+ */
+export interface TextbookCharacter {
+  id: string;
+  char: string;
+  pinyin: string;
+  textbook: 'PEP';
+  grade: '1' | '2' | '3' | '4' | '5' | '6';
+  semester: '1' | '2';
+  unit: number;
+  lessonName: string;
+}
+
+/**
  * @description 原始教材字库元数据契约
  */
 export interface CharacterMeta {

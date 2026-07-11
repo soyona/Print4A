@@ -1,44 +1,24 @@
 import { useSyncExternalStore } from 'react';
+import { pepY2S1Characters } from '../data/textbooks/pep-y2-s1.js';
 import type { AppState, CharacterMeta, OutputMode, WorkbookConfig } from '../types/index.js';
+import type { TextbookCharacter } from '../types/textbook.js';
 
 type Listener = () => void;
 type StoreSelector<T> = (state: AppState) => T;
 
-const mockCharacterPool: CharacterMeta[] = [
-  {
-    id: 'pep-1-up-1-ming',
-    char: '明',
-    pinyin: 'míng',
-    strokes: [],
-    components: ['日', '月'],
-    version: 'PEP',
-    grade: '1',
-    semester: 'UP',
-    unit: 1,
-  },
-  {
-    id: 'pep-3-up-4-ying',
-    char: '赢',
-    pinyin: 'yíng',
-    strokes: [],
-    components: ['亡', '口', '月', '贝', '凡'],
-    version: 'PEP',
-    grade: '3',
-    semester: 'UP',
-    unit: 4,
-  },
-  {
-    id: 'pep-1-down-2-lin',
-    char: '林',
-    pinyin: 'lín',
-    strokes: [],
-    components: ['木', '木'],
-    version: 'PEP',
-    grade: '1',
-    semester: 'DOWN',
-    unit: 2,
-  },
-];
+const toCharacterMeta = (character: TextbookCharacter): CharacterMeta => ({
+  id: character.id,
+  char: character.char,
+  pinyin: character.pinyin,
+  strokes: [],
+  components: [],
+  version: character.textbook,
+  grade: character.grade,
+  semester: character.semester === '1' ? 'UP' : 'DOWN',
+  unit: character.unit,
+});
+
+const characterPool: CharacterMeta[] = pepY2S1Characters.map(toCharacterMeta);
 
 let state: AppState;
 const listeners = new Set<Listener>();
@@ -55,11 +35,11 @@ const setState = (updater: (current: AppState) => AppState): void => {
 const createInitialState = (): AppState => ({
   filter: {
     version: 'PEP',
-    grade: '1',
+    grade: '2',
     semester: 'UP',
     selectedUnit: null,
   },
-  characterPool: mockCharacterPool,
+  characterPool,
   selectedCharIds: new Set<string>(),
   outputMode: 'PRACTICE',
   config: {
@@ -174,4 +154,4 @@ useAppStore.setState = (updater: (current: AppState) => AppState): void => {
 
 useAppStore.subscribe = subscribe;
 
-export { mockCharacterPool };
+export { characterPool };
