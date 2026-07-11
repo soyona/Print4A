@@ -443,7 +443,7 @@ const VisualConfigPanel = () => {
 };
 
 export const SidebarLayout = () => (
-  <aside className="sticky top-0 flex h-screen w-80 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white px-5 py-6">
+  <aside className="sticky top-0 flex h-screen w-96 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white px-5 py-6">
     <div className="mb-5">
       <h1 className="text-lg font-semibold tracking-tight text-slate-950">模板配置</h1>
       <p className="mt-1 text-xs text-slate-500">定制可直接打印的 A4 生字练习模板</p>

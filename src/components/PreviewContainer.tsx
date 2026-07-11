@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import HanziWriter from 'hanzi-writer/dist/index.esm.js';
 import { useAppStore } from '../store/useAppStore.js';
 import type { CharacterMeta, OutputMode, WorkbookConfig } from '../types/index.js';
@@ -34,6 +34,9 @@ const previewPrintStyles = `
   .a4-page {
     width: 210mm;
     height: 297mm;
+    margin-bottom: 24px;
+    border: 1px solid rgb(203 213 225 / 0.5);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -7px rgba(0, 0, 0, 0.1);
     page-break-after: always;
     break-after: page;
     font-family: "Kaiti", "STKaiti", "华文楷体", "楷体", serif !important;
@@ -105,7 +108,8 @@ const previewPrintStyles = `
     }
 
     .print-action-bar,
-    .screen-only {
+    .screen-only,
+    .page-boundary-indicator {
       display: none !important;
     }
 
@@ -114,6 +118,7 @@ const previewPrintStyles = `
       height: 297mm !important;
       margin: 0 !important;
       box-shadow: none !important;
+      border: none !important;
       transform: none !important;
       page-break-after: always;
       break-after: page;
@@ -439,20 +444,24 @@ const A4PageLayout = ({ config, mode, targetCharacters }: A4PageLayoutProps) => 
       : chunkItems(puzzlePieces, puzzlePiecesPerPage);
 
   return (
-    <div className="print-root mx-auto flex flex-col items-center gap-8 py-8 print:block print:p-0">
+    <div className="print-root mx-auto flex flex-col items-center py-8 print:block print:p-0">
       {pages.map((pageItems, pageIndex) => (
-        <section
-          key={`${mode}-page-${pageIndex}`}
-          className="a4-page origin-top overflow-hidden bg-white p-[12mm] shadow-2xl ring-1 ring-slate-200 print:ring-0"
-        >
-          {mode === 'PRACTICE' ? (
-            <PracticeCanvas config={config} data={pageItems as CharacterMeta[]} />
-          ) : pageItems.length === 0 ? (
-            <EmptyPreviewState />
-          ) : (
-            <PuzzleCanvas pieces={pageItems as CharacterPiece[]} />
-          )}
-        </section>
+        <Fragment key={`${mode}-page-${pageIndex}`}>
+          <section className="a4-page origin-top overflow-hidden bg-white p-[12mm]">
+            {mode === 'PRACTICE' ? (
+              <PracticeCanvas config={config} data={pageItems as CharacterMeta[]} />
+            ) : pageItems.length === 0 ? (
+              <EmptyPreviewState />
+            ) : (
+              <PuzzleCanvas pieces={pageItems as CharacterPiece[]} />
+            )}
+          </section>
+          {pageIndex < pages.length - 1 ? (
+            <div className="page-boundary-indicator print:hidden text-xs font-medium text-slate-400/80 text-center my-2 select-none">
+              - 第 {pageIndex + 1} 页 / 共 {pages.length} 页 -
+            </div>
+          ) : null}
+        </Fragment>
       ))}
     </div>
   );
@@ -468,7 +477,7 @@ export const PreviewContainer = () => {
   const targetCharacters = getSelectedCharacters(characterPool, selectedCharIds);
 
   return (
-    <main className="min-h-screen flex-1 bg-slate-100">
+    <main className="min-h-screen flex-1 bg-slate-200/80">
       <style>{previewPrintStyles}</style>
       <PrintActionBar />
       <div className="overflow-auto px-8 pb-10">

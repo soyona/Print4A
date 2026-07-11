@@ -1,4 +1,9 @@
 # 动态上下文 (activeContext.md)
+## 当前所处阶段（2026-07-11 视觉与空间布局优化完成）
+已完成产品经理视觉与空间布局优化：`SidebarLayout` 由 320px 拓宽至 384px，右侧 `main` 保持 `flex-1` 并将工作台调整为 `bg-slate-200/80`，显著拉开白色 A4 纸张与网页背景的明暗反差。
+
+网页端 `.a4-page` 已加入 24px 物理页间距、半透明浅灰边框与双层厚重阴影；多页循环在相邻页面之间动态显示“- 第 X 页 / 共 Y 页 -”边界指示器。打印媒体明确隐藏指示器，并对每页执行 `margin: 0 !important`、`box-shadow: none !important`、`border: none !important`，确保 A4 输出纯净。已运行 `npm run build`，TypeScript 与 Vite 生产构建一次通过，生成完整 CSS/JS 静态产物；黑名单审计与 `git diff --check` 同步通过，等待 Git 推送触发 Vercel 自动部署。
+
 ## 当前所处阶段（2026-07-11 Vercel 生产样式链路修复完成）
 已完成 Vercel 生产样式错乱修复。根因是 React 源码广泛使用 Tailwind utility class，但 Vite 生产入口未加载 CSS、构建链路也未接入 Tailwind，旧 `dist` 因此仅含 HTML 与 JS。现已新增 `src/styles.css` 并通过根级 `index.html` 加载，新增 `vite.config.ts` 接入官方 `@tailwindcss/vite` 插件，`package.json` / `package-lock.json` 同步加入 `tailwindcss` 与 `@tailwindcss/vite`。
 
