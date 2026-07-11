@@ -1,4 +1,23 @@
 # 动态上下文 (activeContext.md)
+## 当前所处阶段（2026-07-11 左侧控制精简与网格逻辑解耦完成）
+已完成“取消输出模式默认字帖，清洗左侧面板中英混杂文案，并解耦‘显示网格’逻辑使其仅控制内部虚线而非外边框”。
+
+`src/components/SidebarLayout.tsx` 已删除输出模式区块与 `ModeSwitcher`，并将“显示拼音 Show Pinyin”“显示网格 Show Grid”“笔顺引导 Show Stroke Guide”统一清洗为“显示拼音”“显示网格”“笔顺引导”。`src/types/index.ts` 与 `src/store/useAppStore.ts` 已删除 `OutputMode`、`outputMode`、`setOutputMode`，右侧预览固定且唯一走字帖渲染路径，不再保留拼图选择分支。
+
+`src/components/PreviewContainer.tsx` 已将 `.hanzi-cell` 永久挂载到所有真实与空白练字格；`showGrid` 仅决定 `mi-grid-bg` SVG 内部十字/米字虚线背景是否出现。连续外框始终由 `.practice-grid` 左边框、每格右/下边框及无拼音时的顶部边框组成，关闭“显示网格”不会再破坏田字格基础骨架。`npm run build` 通过，Vite 转换 21 个模块，生成 CSS 23.76 kB（gzip 5.22 kB）与 JS 252.23 kB（gzip 77.69 kB）；源码残留审计与 `git diff --check` 通过。
+
+## 当前所处阶段（2026-07-11 出版级字帖规范修复完成）
+正在执行出版级字帖规范修复：统一首字与笔顺字形对齐、消除田字格间距、合并四线三格与田字格共用实线。
+
+`src/components/PreviewContainer.tsx` 与 `test-print.html` 已同步完成像素级结构重构：首格母字彻底移除系统文本渲染，统一通过 Hanzi Writer 以相同容器尺寸、`padding: 5` 和 SVG 字形数据渲染，并明确锁定 `showOutline: false`、`strokeColor: '#000000'`；后续笔顺格沿用同一引擎和比例执行渐进描红。
+
+12 列田字格已移除全部 `1.2mm` 横向 gap，改为整行左边框配合每格右/下边框的单线邻接结构。四线三格前三线降噪为浅灰虚线，第四线改为与田字格同粗的纯黑实线，并直接承担字格顶边，实现拼音轨与田字格零缝隙共线缝合；关闭拼音时由字格容器补回顶边。内部十字/米字辅助线保持绝对居中，统一为浅灰 `0.8` 线宽及 `6 8` 虚线节奏。静态打印沙箱同步移除文本母字和旧列间距，内嵌脚本检查为 `embedded-js-ok 1`。`npm run build` 一次通过，Vite 转换 21 个模块，生成 CSS 23.76 kB（gzip 5.22 kB）与 JS 254.17 kB（gzip 78.15 kB）；`git diff --check` 通过，等待人类刷新线上地址验收。
+
+## 当前所处阶段（2026-07-11 同源字形、成对轨道与满页空白模板修复完成）
+已完成四项出版规范修复。`src/components/PreviewContainer.tsx` 的黑色母字不再使用系统楷体文本，而是通过 Hanzi Writer `showCharacter` 与渐进描红共享同一字符数据、尺寸和内边距，消除“哪、宽”等字的笔画长度、重心与部件比例差异；母字颜色读取 `config.textColor`，描红颜色读取 `config.traceColor`。
+
+每个固定两行汉字块现拆为两组严格成对的“7mm 四线三格拼音轨 + 12 格田字格”，并分别响应 `showPinyin` / `showGrid`：关闭拼音后轨道不占高度，关闭网格后外框和内部辅助线同时隐藏。拼音使用 Arial / Helvetica 拉丁字形，不再被全局楷体覆盖，并以第三条线为基线定位，使普通小写字母占中格、升部进入上格、降部进入下格。分页物理高度同步按双拼音轨计算，每页固定 6 个双行汉字块；无论选中 0 至 6 个字，尾页均通过 `practiceRowsPerPage - data.length` 补齐纯空白模板块。侧栏纸张预算同步为每页 6 个双行块及尾页空白块数量。黑名单审计、旧实现残留审计、`git diff --check` 与 `npm run build` 一次通过；Vite 处理 21 个模块，生成 CSS 23.96 kB（gzip 5.28 kB）与 JS 253.94 kB（gzip 78.12 kB），等待人类刷新验收。
+
 ## 当前所处阶段（2026-07-11 固定两行完整笔顺与补空格重构完成）
 已将每个汉字的练字区域重构为固定 12 列、合计至少 24 格的完整行：先顺序放置 1 个母字格与全部真实笔顺格，再用空白练习格补齐两整行；公式锁定为 `max(24, ceil((1 + 总笔画数) / 12) × 12)`，超过 23 画时自动扩展到下一个完整 12 格行，严禁截断。当前字库中“两”为 8 个已用格 + 16 个空白格，“哪”为 10 + 14，“宽”为 11 + 13，“睛”为 14 + 10。
 

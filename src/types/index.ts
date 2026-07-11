@@ -39,11 +39,6 @@ export interface WorkbookConfig {
 }
 
 /**
- * @description 核心输出模式
- */
-export type OutputMode = 'PRACTICE' | 'PUZZLE'; // PRACTICE = 字帖练习模式, PUZZLE = 汉字拆解拼接游戏模式
-
-/**
  * @description Zustand 局部订阅全局/核心状态树定义
  */
 export interface AppState {
@@ -58,8 +53,6 @@ export interface AppState {
   characterPool: CharacterMeta[];
   // 用户勾选的汉字ID集合
   selectedCharIds: Set<string>;
-  // 当前输出模式
-  outputMode: OutputMode;
   // 排版配置
   config: WorkbookConfig;
 
@@ -68,6 +61,5 @@ export interface AppState {
   toggleCharacter: (id: string) => void;
   selectAllCharacters: (ids: string[]) => void;
   clearAllCharacters: () => void;
-  setOutputMode: (mode: OutputMode) => void;
   updateConfig: (updater: Partial<WorkbookConfig>) => void;
 }

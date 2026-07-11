@@ -1,27 +1,22 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import HanziWriter from 'hanzi-writer/dist/index.esm.js';
 import { useAppStore } from '../store/useAppStore.js';
-import type { CharacterMeta, OutputMode, WorkbookConfig } from '../types/index.js';
+import type { CharacterMeta, WorkbookConfig } from '../types/index.js';
 
 const a4PageHeightMm = 297;
 const a4PageVerticalPaddingMm = 24;
 const practicePinyinTrackHeightMm = 7;
 const practiceRowGapMm = 0.25;
-const practiceCellGapMm = 1.2;
 const practiceCellsPerRow = 12;
 const a4PageWidthMm = 210;
 const a4PageHorizontalPaddingMm = 24;
 const practiceCellSizeMm =
-  (a4PageWidthMm -
-    a4PageHorizontalPaddingMm -
-    practiceCellGapMm * (practiceCellsPerRow - 1)) /
-  practiceCellsPerRow;
-const practiceRowHeightMm = practicePinyinTrackHeightMm + practiceCellSizeMm * 2 + practiceRowGapMm;
+  (a4PageWidthMm - a4PageHorizontalPaddingMm) / practiceCellsPerRow;
+const practiceRowHeightMm = (practicePinyinTrackHeightMm + practiceCellSizeMm) * 2 + practiceRowGapMm;
 const practiceRowsPerPage = Math.floor(
   (a4PageHeightMm - a4PageVerticalPaddingMm + practiceRowGapMm) /
     (practiceRowHeightMm + practiceRowGapMm),
 );
-const puzzlePiecesPerPage = 36;
 const paleStrokeColor = '#f1f5f9';
 
 const previewPrintStyles = `
@@ -58,6 +53,17 @@ const previewPrintStyles = `
     font-family: "Kaiti", "STKaiti", "华文楷体", "楷体", serif !important;
   }
 
+  .pinyin-text {
+    position: absolute;
+    inset-inline: 0;
+    bottom: calc(33.333% - 1px);
+    font-family: Arial, "Helvetica Neue", sans-serif !important;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 12px;
+    text-align: center;
+  }
+
   .mi-grid-bg {
     /* 彻底移除原 SVG 中的外层实线矩形，仅保留内部极细的十字与对角斜线 */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100 M0 0L100 100 M100 0L0 100' stroke='%23cbd5e1' stroke-width='0.8' stroke-dasharray='6 8' fill='none'/%3E%3C/svg%3E");
@@ -67,9 +73,18 @@ const previewPrintStyles = `
   }
 
   .hanzi-cell {
-    border: 1px solid #64748b !important;
+    border-right: 1px solid #000000;
+    border-bottom: 1px solid #000000;
     border-radius: 0;
     box-sizing: border-box;
+  }
+
+  .practice-grid {
+    border-left: 1px solid #000000;
+  }
+
+  .practice-grid-without-pinyin {
+    border-top: 1px solid #000000;
   }
 
   .hanzi-writer-target,
@@ -130,14 +145,7 @@ const previewPrintStyles = `
   }
 `;
 
-type CharacterPiece = {
-  id: string;
-  sourceChar: string;
-  value: string;
-};
-
 type A4PageLayoutProps = {
-  mode: OutputMode;
   targetCharacters: CharacterMeta[];
   config: WorkbookConfig;
   strokeCounts: Record<string, number>;
@@ -147,10 +155,6 @@ type PracticeCanvasProps = {
   data: CharacterMeta[];
   config: WorkbookConfig;
   strokeCounts: Record<string, number>;
-};
-
-type PuzzleCanvasProps = {
-  pieces: CharacterPiece[];
 };
 
 type PracticeCellRole = 'MASTER' | 'TRACE' | 'EMPTY';
@@ -181,15 +185,6 @@ const getSelectedCharacters = (
   characterPool: CharacterMeta[],
   selectedCharIds: Set<string>,
 ): CharacterMeta[] => characterPool.filter((character) => selectedCharIds.has(character.id));
-
-const getPuzzlePieces = (characters: CharacterMeta[]): CharacterPiece[] =>
-  characters.flatMap((character) =>
-    character.components.map((component, index) => ({
-      id: `${character.id}-piece-${index}`,
-      sourceChar: character.char,
-      value: component,
-    })),
-  );
 
 const getPracticeCells = (character: CharacterMeta, strokeCount: number, showStrokeGuide: boolean): PracticeCell[] => {
   const traceSlots = showStrokeGuide ? strokeCount : 0;
@@ -256,28 +251,34 @@ const PinyinTrack = ({
   character?: CharacterMeta;
   config: WorkbookConfig;
   rowId: string;
-}) => (
-  <div className="relative h-[7mm]">
-    {config.showPinyin ? (
+}) => {
+  if (!config.showPinyin) {
+    return null;
+  }
+
+  return (
+    <div className="relative h-[7mm]">
       <>
-        <div className="absolute inset-x-0 top-0 border-t border-solid border-[#e2e8f0]" />
-        <div className="absolute inset-x-0 top-1/3 border-t border-solid border-[#e2e8f0]" />
-        <div className="absolute inset-x-0 top-2/3 border-t border-solid border-[#e2e8f0]" />
-        <div className="absolute inset-x-0 bottom-0 border-t border-solid border-[#e2e8f0]" />
+        <div className="absolute inset-x-0 top-0 border-t border-dashed border-slate-300" />
+        <div className="absolute inset-x-0 top-1/3 border-t border-dashed border-slate-300" />
+        <div className="absolute inset-x-0 top-2/3 border-t border-dashed border-slate-300" />
+        <div className="absolute inset-x-0 bottom-0 border-t border-solid border-black" />
         <div
-          className="relative grid h-full gap-x-[1.2mm]"
+          className="relative grid h-full"
           style={{ gridTemplateColumns: `repeat(${cellCount}, minmax(0, 1fr))` }}
         >
           {Array.from({ length: cellCount }, (_, cellIndex) => (
             <div
               key={`${rowId}-pinyin-${cellIndex}`}
-              className={[
-                'flex h-full items-center justify-center text-[12px] font-semibold leading-none',
-                cellIndex === 0 ? 'text-slate-950' : 'text-slate-300',
-              ].join(' ')}
+              className="relative h-full"
             >
               {character?.pinyin ? (
-                <span className="relative z-[1] bg-white px-[0.35mm] py-[0.15mm] leading-none">
+                <span
+                  className={[
+                    'pinyin-text z-[1]',
+                    cellIndex === 0 ? 'text-slate-950' : 'text-slate-300',
+                  ].join(' ')}
+                >
                   {character.pinyin}
                 </span>
               ) : null}
@@ -285,9 +286,9 @@ const PinyinTrack = ({
           ))}
         </div>
       </>
-    ) : null}
-  </div>
-);
+    </div>
+  );
+};
 
 const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: WorkbookConfig }) => {
   const targetRef = useRef<HTMLDivElement | null>(null);
@@ -295,7 +296,7 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
   useEffect(() => {
     const target = targetRef.current;
 
-    if (!target || !config.showStrokeGuide || cell.role !== 'TRACE') {
+    if (!target || cell.role === 'EMPTY' || (cell.role === 'TRACE' && !config.showStrokeGuide)) {
       return undefined;
     }
 
@@ -309,14 +310,18 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
 
       target.innerHTML = '';
       const measuredSize = Math.max(56, Math.round(target.getBoundingClientRect().width || target.clientWidth || 72));
+      const isMaster = cell.role === 'MASTER';
+      const showCompleteCharacter = isMaster || cell.isFinalTrace;
+      const strokeColor = isMaster ? '#000000' : config.traceColor;
+
       writer = HanziWriter.create(target, cell.character.char, {
         width: measuredSize,
         height: measuredSize,
         padding: 5,
         renderer: 'svg',
-        showCharacter: cell.isFinalTrace,
-        showOutline: !cell.isFinalTrace,
-        strokeColor: config.traceColor,
+        showCharacter: showCompleteCharacter,
+        showOutline: isMaster ? false : !showCompleteCharacter,
+        strokeColor,
         radicalColor: null,
         outlineColor: paleStrokeColor,
         highlightColor: config.traceColor,
@@ -324,7 +329,7 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
         strokeFadeDuration: 0,
         drawingFadeDuration: 0,
       });
-      if (!cell.isFinalTrace) {
+      if (cell.role === 'TRACE' && !cell.isFinalTrace) {
         void writer.quiz({
           quizStartStrokeNum: cell.traceStep,
           showHintAfterMisses: false,
@@ -344,15 +349,21 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
     };
   }, [cell.character.char, cell.isFinalTrace, cell.role, cell.traceStep, config.showStrokeGuide, config.traceColor]);
 
-  if (!config.showStrokeGuide || cell.role !== 'TRACE') {
+  if (cell.role === 'EMPTY' || (cell.role === 'TRACE' && !config.showStrokeGuide)) {
     return null;
   }
 
   return (
     <div
       ref={targetRef}
-      className="hanzi-writer-target aspect-square w-[88%] pointer-events-none mx-auto"
-      aria-label={cell.isFinalTrace ? `${cell.character.char} 完整笔顺描红` : `${cell.character.char} 前 ${cell.traceStep} 笔描红`}
+      className="hanzi-writer-target pointer-events-none h-full w-full"
+      aria-label={
+        cell.role === 'MASTER'
+          ? `${cell.character.char} 标准母字`
+          : cell.isFinalTrace
+            ? `${cell.character.char} 完整笔顺描红`
+            : `${cell.character.char} 前 ${cell.traceStep} 笔描红`
+      }
     />
   );
 };
@@ -365,13 +376,7 @@ const PracticeCellView = ({ cell, config }: { cell: PracticeCell; config: Workbo
     ].join(' ')}
     style={getGridBackgroundStyle(config)}
   >
-    {cell.role === 'MASTER' ? (
-      <span className="practice-char relative text-[3.35rem] font-normal leading-none" style={{ color: '#000000' }}>
-        {cell.character.char}
-      </span>
-    ) : (
-      <HanziWriterTrace cell={cell} config={config} />
-    )}
+    <HanziWriterTrace cell={cell} config={config} />
   </div>
 );
 
@@ -380,20 +385,27 @@ const BlankPracticeRow = ({ config, rowIndex }: { config: WorkbookConfig; rowInd
 
   return (
     <div className="practice-row w-full">
-      <PinyinTrack cellCount={practiceCellsPerRow} config={config} rowId={rowId} />
-      <div className="grid w-full gap-x-[1.2mm] gap-y-[0.25mm]" style={{ gridTemplateColumns: `repeat(${practiceCellsPerRow}, minmax(0, 1fr))` }}>
-        {Array.from({ length: practiceCellsPerRow * 2 }, (_, cellIndex) => (
+      {Array.from({ length: 2 }, (_, gridRowIndex) => (
+        <div key={`${rowId}-pair-${gridRowIndex}`} className={gridRowIndex === 0 ? '' : 'mt-[0.25mm]'}>
+          <PinyinTrack cellCount={practiceCellsPerRow} config={config} rowId={`${rowId}-${gridRowIndex}`} />
           <div
-            key={`${rowId}-cell-${cellIndex}`}
-            className={[
-              'hanzi-cell relative aspect-square min-w-0 overflow-hidden bg-white',
-              config.showGrid ? 'mi-grid-bg' : '',
-            ].join(' ')}
-            style={getGridBackgroundStyle(config)}
-            aria-hidden="true"
-          />
-        ))}
-      </div>
+            className={`practice-grid grid w-full ${config.showPinyin ? '' : 'practice-grid-without-pinyin'}`}
+            style={{ gridTemplateColumns: `repeat(${practiceCellsPerRow}, minmax(0, 1fr))` }}
+          >
+            {Array.from({ length: practiceCellsPerRow }, (_, cellIndex) => (
+              <div
+                key={`${rowId}-${gridRowIndex}-cell-${cellIndex}`}
+                className={[
+                  'hanzi-cell relative aspect-square min-w-0 overflow-hidden bg-white',
+                  config.showGrid ? 'mi-grid-bg' : '',
+                ].join(' ')}
+                style={getGridBackgroundStyle(config)}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
@@ -411,80 +423,57 @@ const CharacterPracticeBlock = ({
 
   return (
     <div className="practice-row w-full">
-      <PinyinTrack
-        cellCount={practiceCellsPerRow}
-        character={character}
-        config={config}
-        rowId={character.id}
-      />
-      <div
-        className="grid w-full gap-x-[1.2mm] gap-y-[0.25mm]"
-        style={{ gridTemplateColumns: `repeat(${practiceCellsPerRow}, minmax(0, 1fr))` }}
-      >
-        {practiceCells.map((cell) => (
-          <PracticeCellView key={cell.id} cell={cell} config={config} />
-        ))}
-      </div>
+      {chunkItems(practiceCells, practiceCellsPerRow).map((rowCells, gridRowIndex) => (
+        <div key={`${character.id}-pair-${gridRowIndex}`} className={gridRowIndex === 0 ? '' : 'mt-[0.25mm]'}>
+          <PinyinTrack
+            cellCount={practiceCellsPerRow}
+            character={character}
+            config={config}
+            rowId={`${character.id}-${gridRowIndex}`}
+          />
+          <div
+            className={`practice-grid grid w-full ${config.showPinyin ? '' : 'practice-grid-without-pinyin'}`}
+            style={{ gridTemplateColumns: `repeat(${practiceCellsPerRow}, minmax(0, 1fr))` }}
+          >
+            {rowCells.map((cell) => (
+              <PracticeCellView key={cell.id} cell={cell} config={config} />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
 
 const PracticeCanvas = ({ config, data, strokeCounts }: PracticeCanvasProps) => (
   <div className="flex h-full flex-col gap-[0.25mm]">
-    {data.length > 0
-      ? data.map((character) => (
+    {data.map((character) => (
           <CharacterPracticeBlock
             key={character.id}
             character={character}
             config={config}
             strokeCount={strokeCounts[character.id] ?? 0}
           />
-        ))
-      : Array.from({ length: practiceRowsPerPage }, (_, rowIndex) => (
-          <BlankPracticeRow key={`page-blank-practice-row-${rowIndex}`} config={config} rowIndex={rowIndex} />
         ))}
-  </div>
-);
-
-const PuzzleCanvas = ({ pieces }: PuzzleCanvasProps) => (
-  <div className="grid h-full grid-cols-6 auto-rows-fr gap-4">
-    {pieces.map((piece) => (
-      <div
-        key={piece.id}
-        className="flex min-h-0 flex-col items-center justify-center border-2 border-dashed border-slate-500 bg-white"
-      >
-        <span className="practice-char text-5xl font-semibold leading-none text-slate-950">{piece.value}</span>
-        <span className="practice-char mt-3 text-xs font-medium text-slate-400">{piece.sourceChar}</span>
-      </div>
+    {Array.from({ length: Math.max(0, practiceRowsPerPage - data.length) }, (_, rowIndex) => (
+      <BlankPracticeRow
+        key={`page-blank-practice-row-${data.length}-${rowIndex}`}
+        config={config}
+        rowIndex={data.length + rowIndex}
+      />
     ))}
   </div>
 );
 
-const EmptyPreviewState = () => (
-  <div className="screen-only flex h-full items-center justify-center border-2 border-dashed border-slate-200 bg-slate-50 text-sm font-medium text-slate-500">
-    请先在左侧选择需要打印的汉字
-  </div>
-);
-
-const A4PageLayout = ({ config, mode, strokeCounts, targetCharacters }: A4PageLayoutProps) => {
-  const puzzlePieces = getPuzzlePieces(targetCharacters);
-  const pages =
-    mode === 'PRACTICE'
-      ? chunkItems(targetCharacters, practiceRowsPerPage)
-      : chunkItems(puzzlePieces, puzzlePiecesPerPage);
+const A4PageLayout = ({ config, strokeCounts, targetCharacters }: A4PageLayoutProps) => {
+  const pages = chunkItems(targetCharacters, practiceRowsPerPage);
 
   return (
     <div className="print-root mx-auto flex flex-col items-center py-8 print:block print:p-0">
       {pages.map((pageItems, pageIndex) => (
-        <Fragment key={`${mode}-page-${pageIndex}`}>
+        <Fragment key={`practice-page-${pageIndex}`}>
           <section className="a4-page origin-top overflow-hidden bg-white p-[12mm]">
-            {mode === 'PRACTICE' ? (
-              <PracticeCanvas config={config} data={pageItems as CharacterMeta[]} strokeCounts={strokeCounts} />
-            ) : pageItems.length === 0 ? (
-              <EmptyPreviewState />
-            ) : (
-              <PuzzleCanvas pieces={pageItems as CharacterPiece[]} />
-            )}
+            <PracticeCanvas config={config} data={pageItems} strokeCounts={strokeCounts} />
           </section>
           {pageIndex < pages.length - 1 ? (
             <div className="page-boundary-indicator print:hidden text-xs font-medium text-slate-400/80 text-center my-2 select-none">
@@ -498,10 +487,9 @@ const A4PageLayout = ({ config, mode, strokeCounts, targetCharacters }: A4PageLa
 };
 
 export const PreviewContainer = () => {
-  const { characterPool, config, outputMode, selectedCharIds } = useAppStore((state) => ({
+  const { characterPool, config, selectedCharIds } = useAppStore((state) => ({
     characterPool: state.characterPool,
     config: state.config,
-    outputMode: state.outputMode,
     selectedCharIds: state.selectedCharIds,
   }));
   const targetCharacters = useMemo(
@@ -572,12 +560,11 @@ export const PreviewContainer = () => {
       <PrintActionBar isPrintReady={isPrintReady} statusText={printStatusText} />
       <div className="overflow-auto px-8 pb-10">
         <div className="screen-only mx-auto flex max-w-[210mm] items-center justify-between pt-6 text-xs font-medium text-slate-500">
-          <span>{outputMode === 'PRACTICE' ? '字帖练习模式' : '拼图游戏模式'}</span>
+          <span>字帖练习模式</span>
           <span>{targetCharacters.length} 个汉字</span>
         </div>
         <A4PageLayout
           config={config}
-          mode={outputMode}
           strokeCounts={strokeLoadState.counts}
           targetCharacters={targetCharacters}
         />
@@ -586,4 +573,4 @@ export const PreviewContainer = () => {
   );
 };
 
-export { A4PageLayout, PracticeCanvas, PrintActionBar, PuzzleCanvas };
+export { A4PageLayout, PracticeCanvas, PrintActionBar };

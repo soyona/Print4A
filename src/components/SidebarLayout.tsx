@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
-import type { AppState, CharacterMeta, GradeLevel, OutputMode, SemesterType } from '../types/index.js';
+import type { AppState, CharacterMeta, GradeLevel, SemesterType } from '../types/index.js';
 
 const gradeOptions: GradeLevel[] = ['1', '2', '3', '4', '5', '6'];
 const semesterOptions: Array<{ label: string; value: SemesterType }> = [
@@ -13,8 +13,6 @@ const selectClassName =
 
 const actionButtonClassName =
   'h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50';
-
-const modeButtonBaseClassName = 'h-10 rounded-md text-sm font-semibold transition';
 
 const rangeInputClassName = 'w-full accent-slate-950';
 
@@ -139,9 +137,9 @@ const CharacterPicker = () => {
   const visibleCharacters = getFilteredCharacters(characterPool, filter);
   const visibleCharacterIds = visibleCharacters.map((character) => character.id);
   const selectedCount = selectedCharIds.size;
-  const rowsPerPage = 12;
-  const estimatedPages = Math.max(1, Math.ceil(selectedCount / rowsPerPage));
-  const blankRowsOnLastPage = estimatedPages * rowsPerPage - selectedCount;
+  const characterBlocksPerPage = 6;
+  const estimatedPages = Math.max(1, Math.ceil(selectedCount / characterBlocksPerPage));
+  const blankBlocksOnLastPage = estimatedPages * characterBlocksPerPage - selectedCount;
 
   const handleSelectAll = (): void => {
     selectAllCharacters(visibleCharacterIds);
@@ -168,8 +166,8 @@ const CharacterPicker = () => {
         role="status"
         aria-live="polite"
       >
-        已选 {selectedCount} 个生字。预计占用 {estimatedPages} 页 A4 纸（第 1 页满载 12 行，尾页自动补齐{' '}
-        {blankRowsOnLastPage} 行纯空白练习行）。
+        已选 {selectedCount} 个生字。预计占用 {estimatedPages} 页 A4 纸（每页满载 6 个双行汉字块，尾页自动补齐{' '}
+        {blankBlocksOnLastPage} 个纯空白模板块）。
       </div>
 
       <div className="grid grid-cols-4 gap-2">
@@ -200,45 +198,6 @@ const CharacterPicker = () => {
           当前筛选暂无生字
         </div>
       ) : null}
-    </section>
-  );
-};
-
-const ModeSwitcher = () => {
-  const { outputMode, setOutputMode } = useAppStore((state) => ({
-    outputMode: state.outputMode,
-    setOutputMode: state.setOutputMode,
-  }));
-
-  const modeOptions: Array<{ label: string; value: OutputMode }> = [
-    { label: '字帖', value: 'PRACTICE' },
-    { label: '拼图', value: 'PUZZLE' },
-  ];
-
-  return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-slate-950">输出模式</h2>
-
-      <div className="grid grid-cols-2 gap-2 rounded-md bg-slate-200 p-1">
-        {modeOptions.map((mode) => {
-          const isActive = outputMode === mode.value;
-
-          return (
-            <button
-              key={mode.value}
-              className={[
-                modeButtonBaseClassName,
-                isActive ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-950',
-              ].join(' ')}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => setOutputMode(mode.value)}
-            >
-              {mode.label}
-            </button>
-          );
-        })}
-      </div>
     </section>
   );
 };
@@ -299,7 +258,7 @@ const PinyinConfigControl = () => {
 
   return (
     <ToggleControl
-      label="显示拼音 Show Pinyin"
+      label="显示拼音"
       checked={config.showPinyin}
       onChange={(showPinyin) => updateConfig({ showPinyin })}
     />
@@ -321,7 +280,7 @@ const VisualConfigPanel = () => {
         </div>
 
         <ToggleControl
-          label="显示网格 Show Grid"
+          label="显示网格"
           checked={config.showGrid}
           onChange={(showGrid) => updateConfig({ showGrid })}
         />
@@ -372,7 +331,7 @@ const VisualConfigPanel = () => {
         </div>
 
         <ToggleControl
-          label="笔顺引导 Show Stroke Guide"
+          label="笔顺引导"
           checked={config.showStrokeGuide}
           onChange={(showStrokeGuide) => updateConfig({ showStrokeGuide })}
         />
@@ -491,10 +450,6 @@ export const SidebarLayout = () => {
       <div className="space-y-4">
         <PresetSelector activePreset={activePreset} onSelect={applyPreset} />
 
-      <section className="rounded-xl border border-slate-200 bg-slate-100/80 p-4">
-        <ModeSwitcher />
-      </section>
-
       <section className="space-y-5 rounded-xl border border-slate-200 bg-slate-100/80 p-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-950">字帖内容</h2>
@@ -536,4 +491,4 @@ export const SidebarLayout = () => {
   );
 };
 
-export { CharacterPicker, ModeSwitcher, TextbookSelector, VisualConfigPanel };
+export { CharacterPicker, TextbookSelector, VisualConfigPanel };

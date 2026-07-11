@@ -10,13 +10,11 @@ AppRoot
 ├── SidebarLayout (控制面板侧边栏)
 │    ├── TextbookSelector (教材多级联动筛选器)
 │    ├── CharacterPicker (生字网格自选面板)
-│    ├── ModeSwitcher (模式切换: 字帖 / 拼图)
 │    └── VisualConfigPanel (字帖排版与视觉配置项)
 └── PreviewContainer (右侧 A4 实时打印预览区)
 ├── PrintActionBar (打印触发动作条)
 └── A4PageLayout (等比例 A4 纸张页面容器，通过 CSS Paged Media 控制原生打印行为)
-├── PracticeCanvas (字帖渲染画布 - 仅在 PRACTICE 模式下激活)
-└── PuzzleCanvas (拆解拼接游戏画布 - 仅在 PUZZLE 模式下激活)
+└── PracticeCanvas (唯一启用的字帖渲染画布)
 
 ```
 
@@ -45,17 +43,9 @@ AppRoot
 
 ### 4. `A4PageLayout`
 * **输入 (Props)**:
-  * `mode: OutputMode`: 渲染模式。
   * `targetCharacters: CharacterMeta[]`: 用户选中的汉字结构化实体数组。
   * `config: WorkbookConfig`: 冻结的排版样式宪法。
 * **输出 (Events)**: 无。
 * **副作用 (Side-Effects)**:
   * 依赖 Tailwind 的打印媒介查询 (`print:margin-0` 等) 和 CSS `page-break-after: always` 进行物理分页计算。
   * 当 `targetCharacters` 的数量突破 A4 页面最大网格容纳临界值时，在前端内存中动态切割子数组，分立渲染多个虚拟 A4 Page 节点。
-
-### 5. `PuzzleCanvas`
-* **输入 (Props)**:
-  * `data: CharacterMeta[]`: 需要执行游戏化裁剪输出的汉字队列。
-* **输出 (Events)**: 无。
-* **副作用 (Side-Effects)**:
-  * 解析内部汉字的 `components` 数组。利用 Tailwind 的布局引擎和虚线/实线样式 (`border-dashed`)，在每个独立部件周围包裹规范的裁剪辅助线框。

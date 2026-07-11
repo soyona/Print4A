@@ -50,16 +50,25 @@
       }
 
       .mi-grid-bg {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100 M0 0L100 100 M100 0L0 100' stroke='%23cbd5e1' stroke-width='0.8' stroke-dasharray='6 6' fill='none'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100 M0 0L100 100 M100 0L0 100' stroke='%23cbd5e1' stroke-width='0.8' stroke-dasharray='6 8' fill='none'/%3E%3C/svg%3E");
         background-position: center;
         background-repeat: no-repeat;
         background-size: 100% 100%;
       }
 
       .hanzi-cell {
-        border: 1px solid #64748b !important;
+        border-right: 1px solid #000000;
+        border-bottom: 1px solid #000000;
         border-radius: 0;
         box-sizing: border-box;
+      }
+
+      .practice-grid {
+        border-left: 1px solid #000000;
+      }
+
+      .practice-grid-without-pinyin {
+        border-top: 1px solid #000000;
       }
 
       .hanzi-writer-target,
@@ -294,15 +303,11 @@
       const a4PageVerticalPaddingMm = 24;
       const practicePinyinTrackHeightMm = 7;
       const practiceRowGapMm = 0.25;
-      const practiceCellGapMm = 1.2;
       const practiceCellsPerRow = 12;
       const a4PageWidthMm = 210;
       const a4PageHorizontalPaddingMm = 24;
       const practiceCellSizeMm =
-        (a4PageWidthMm -
-          a4PageHorizontalPaddingMm -
-          practiceCellGapMm * (practiceCellsPerRow - 1)) /
-        practiceCellsPerRow;
+        (a4PageWidthMm - a4PageHorizontalPaddingMm) / practiceCellsPerRow;
       const practiceRowHeightMm = practicePinyinTrackHeightMm + practiceCellSizeMm;
       const practiceRowsPerPage = Math.floor(
         (a4PageHeightMm - a4PageVerticalPaddingMm + practiceRowGapMm) /
@@ -588,33 +593,29 @@
       };
 
       const renderPinyinTrack = (character, config, cellCount) =>
-        `<div class="relative h-[7mm]">
-          ${
-            config.showPinyin
-              ? `<div class="absolute inset-x-0 top-0 border-t border-dashed border-[#cbd5e1]"></div>
-                <div class="absolute inset-x-0 top-1/3 border-t border-dashed border-[#cbd5e1]"></div>
-                <div class="absolute inset-x-0 top-2/3 border-t border-dashed border-[#cbd5e1]"></div>
-                <div class="absolute inset-x-0 bottom-0 border-t border-dashed border-[#cbd5e1]"></div>
-                <div class="relative grid h-full gap-x-[1.2mm]" style="grid-template-columns: repeat(${cellCount}, minmax(0, 1fr));">
+        config.showPinyin
+          ? `<div class="relative h-[7mm]">
+              <div class="absolute inset-x-0 top-0 border-t border-dashed border-slate-300"></div>
+                <div class="absolute inset-x-0 top-1/3 border-t border-dashed border-slate-300"></div>
+                <div class="absolute inset-x-0 top-2/3 border-t border-dashed border-slate-300"></div>
+                <div class="absolute inset-x-0 bottom-0 border-t border-solid border-black"></div>
+                <div class="relative grid h-full" style="grid-template-columns: repeat(${cellCount}, minmax(0, 1fr));">
                   ${Array.from({ length: cellCount }, (_, cellIndex) =>
                     `<div class="flex h-full items-center justify-center pb-[0.1mm] text-[10px] font-medium leading-none ${cellIndex === 0 ? "text-slate-950" : "text-slate-300"}">${character ? escapeHtml(character.pinyin) : ""}</div>`,
                   ).join("")}
-                </div>`
-              : ""
-          }
-        </div>`;
-
-      const renderHanziGlyph = (char, color) =>
-        `<span class="practice-char relative text-[3.35rem] font-normal leading-none" style="color: ${escapeHtml(color)}">${escapeHtml(char)}</span>`;
+                </div>
+            </div>`
+          : "";
 
       const renderTraceContent = (cell, config) => {
-        if (!config.showStrokeGuide || cell.role !== "TRACE") {
+        if (cell.role === "EMPTY" || (cell.role === "TRACE" && !config.showStrokeGuide)) {
           return "";
         }
 
         return `<div
-          class="hanzi-writer-target aspect-square w-[88%] pointer-events-none mx-auto"
+          class="hanzi-writer-target pointer-events-none h-full w-full"
           data-hanzi="${escapeHtml(cell.character.char)}"
+          data-role="${cell.role}"
           data-trace-step="${cell.traceStep}"
           data-trace-color="${escapeHtml(config.traceColor || "#4b5563")}"
           aria-label="${escapeHtml(cell.character.char)} 前 ${cell.traceStep} 笔描红"
@@ -623,11 +624,7 @@
 
       const renderPracticeCell = (cell, config) =>
         `<div class="hanzi-cell relative flex aspect-square min-w-0 items-center justify-center overflow-hidden bg-white ${config.showGrid ? "mi-grid-bg" : ""}">
-          ${
-            cell.role === "MASTER"
-              ? renderHanziGlyph(cell.character.char, "#000000")
-              : renderTraceContent(cell, config)
-          }
+          ${renderTraceContent(cell, config)}
         </div>`;
 
       const destroyHanziWriters = () => {
@@ -643,6 +640,7 @@
         document.querySelectorAll(".hanzi-writer-target").forEach((target) => {
           target.innerHTML = "";
           const character = target.dataset.hanzi;
+          const isMaster = target.dataset.role === "MASTER";
           const traceStep = Number(target.dataset.traceStep || "1");
           const traceColor = target.dataset.traceColor || "#4b5563";
           const measuredSize = Math.max(56, Math.round(target.getBoundingClientRect().width || target.clientWidth || 72));
@@ -651,9 +649,9 @@
             height: measuredSize,
             padding: 5,
             renderer: "svg",
-            showCharacter: false,
-            showOutline: true,
-            strokeColor: traceColor,
+            showCharacter: isMaster,
+            showOutline: isMaster ? false : true,
+            strokeColor: isMaster ? "#000000" : traceColor,
             radicalColor: null,
             outlineColor: paleStrokeColor,
             highlightColor: traceColor,
@@ -662,12 +660,14 @@
             drawingFadeDuration: 0,
           });
 
-          writer.quiz({
-            quizStartStrokeNum: traceStep,
-            showHintAfterMisses: false,
-            highlightOnComplete: false,
-            markStrokeCorrectAfterMisses: false,
-          });
+          if (!isMaster) {
+            writer.quiz({
+              quizStartStrokeNum: traceStep,
+              showHintAfterMisses: false,
+              highlightOnComplete: false,
+              markStrokeCorrectAfterMisses: false,
+            });
+          }
           activeHanziWriters.push(writer);
         });
       };
@@ -682,7 +682,7 @@
                 return `
                 <div class="practice-row w-full">
                   ${renderPinyinTrack(character, config, practiceCells.length)}
-                  <div class="grid w-full gap-x-[1.2mm]" style="grid-template-columns: repeat(${practiceCells.length}, minmax(0, 1fr));">
+                  <div class="practice-grid grid w-full ${config.showPinyin ? "" : "practice-grid-without-pinyin"}" style="grid-template-columns: repeat(${practiceCells.length}, minmax(0, 1fr));">
                     ${practiceCells.map((cell) => renderPracticeCell(cell, config)).join("")}
                   </div>
                 </div>
@@ -696,7 +696,7 @@
       const renderBlankPracticeRow = (config) =>
         `<div class="practice-row w-full">
           ${renderPinyinTrack(null, config, practiceCellsPerRow)}
-          <div class="grid w-full gap-x-[1.2mm]" style="grid-template-columns: repeat(${practiceCellsPerRow}, minmax(0, 1fr));">
+          <div class="practice-grid grid w-full ${config.showPinyin ? "" : "practice-grid-without-pinyin"}" style="grid-template-columns: repeat(${practiceCellsPerRow}, minmax(0, 1fr));">
             ${Array.from(
               { length: practiceCellsPerRow },
               () =>

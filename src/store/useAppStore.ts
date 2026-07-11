@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { pepY2S1Characters } from '../data/textbooks/pep-y2-s1.js';
-import type { AppState, CharacterMeta, OutputMode, WorkbookConfig } from '../types/index.js';
+import type { AppState, CharacterMeta, WorkbookConfig } from '../types/index.js';
 import type { TextbookCharacter } from '../types/textbook.js';
 
 type Listener = () => void;
@@ -41,7 +41,6 @@ const createInitialState = (): AppState => ({
   },
   characterPool,
   selectedCharIds: new Set<string>(),
-  outputMode: 'PRACTICE',
   config: {
     showGrid: true,
     gridType: 'MI',
@@ -96,12 +95,6 @@ const createInitialState = (): AppState => ({
     setState((current) => ({
       ...current,
       selectedCharIds: new Set<string>(),
-    }));
-  },
-  setOutputMode: (mode: OutputMode) => {
-    setState((current) => ({
-      ...current,
-      outputMode: mode,
     }));
   },
   updateConfig: (updater: Partial<WorkbookConfig>) => {
