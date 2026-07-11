@@ -250,21 +250,6 @@ const SegmentedControl = <T extends string>({
   </div>
 );
 
-const PinyinConfigControl = () => {
-  const { config, updateConfig } = useAppStore((state) => ({
-    config: state.config,
-    updateConfig: state.updateConfig,
-  }));
-
-  return (
-    <ToggleControl
-      label="显示拼音"
-      checked={config.showPinyin}
-      onChange={(showPinyin) => updateConfig({ showPinyin })}
-    />
-  );
-};
-
 const VisualConfigPanel = () => {
   const { config, updateConfig } = useAppStore((state) => ({
     config: state.config,
@@ -276,8 +261,14 @@ const VisualConfigPanel = () => {
       <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-100/80 p-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-950">格子样式</h2>
-          <p className="mt-1 text-xs text-slate-500">控制练字辅助线的结构与视觉强度</p>
+          <p className="mt-1 text-xs text-slate-500">控制四线三格与练字辅助线的结构和视觉强度</p>
         </div>
+
+        <ToggleControl
+          label="显示四线三格"
+          checked={config.showPinyin}
+          onChange={(showPinyin) => updateConfig({ showPinyin })}
+        />
 
         <ToggleControl
           label="显示网格"
@@ -353,92 +344,8 @@ const VisualConfigPanel = () => {
   );
 };
 
-type PresetId = 'FOUNDATION' | 'INDEPENDENT' | 'BLANK';
-
-const presetOptions: Array<{ description: string; icon: string; id: PresetId; label: string }> = [
-  { id: 'FOUNDATION', icon: '👶', label: '幼小衔接', description: '基础描红' },
-  { id: 'INDEPENDENT', icon: '👦', label: '低年级', description: '自主练字' },
-  { id: 'BLANK', icon: '📄', label: '纯空白格', description: '备用纸' },
-];
-
-const PresetSelector = ({ activePreset, onSelect }: { activePreset: PresetId; onSelect: (preset: PresetId) => void }) => (
-  <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-100/80 p-4">
-    <div>
-      <h2 className="text-sm font-semibold text-slate-950">场景化一键预设</h2>
-      <p className="mt-1 text-xs text-slate-500">选择使用场景，自动完成整套排版配置</p>
-    </div>
-
-    <div className="grid grid-cols-3 gap-2">
-      {presetOptions.map((preset) => {
-        const isActive = activePreset === preset.id;
-
-        return (
-          <button
-            key={preset.id}
-            className={[
-              'min-h-24 rounded-xl border px-2 py-3 text-center transition focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
-              isActive
-                ? 'border-slate-950 bg-slate-950 text-white shadow-md'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50',
-            ].join(' ')}
-            type="button"
-            aria-pressed={isActive}
-            onClick={() => onSelect(preset.id)}
-          >
-            <span className="block text-xl" aria-hidden="true">{preset.icon}</span>
-            <span className="mt-1 block text-xs font-semibold">{preset.label}</span>
-            <span className={['mt-0.5 block text-[11px]', isActive ? 'text-slate-300' : 'text-slate-500'].join(' ')}>
-              {preset.description}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  </section>
-);
-
 export const SidebarLayout = () => {
-  const { clearAllCharacters, updateConfig } = useAppStore((state) => ({
-    clearAllCharacters: state.clearAllCharacters,
-    updateConfig: state.updateConfig,
-  }));
-  const [activePreset, setActivePreset] = useState<PresetId>('FOUNDATION');
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-
-  const applyPreset = (preset: PresetId): void => {
-    setActivePreset(preset);
-
-    if (preset === 'FOUNDATION') {
-      updateConfig({
-        showPinyin: true,
-        showGrid: true,
-        gridType: 'MI',
-        gridLineColor: '#fca5a5',
-        showStrokeGuide: true,
-        traceColor: '#dc2626',
-      });
-      return;
-    }
-
-    if (preset === 'INDEPENDENT') {
-      updateConfig({
-        showPinyin: false,
-        showGrid: true,
-        gridLineColor: '#cbd5e1',
-        showStrokeGuide: false,
-        traceColor: '#4b5563',
-      });
-      return;
-    }
-
-    clearAllCharacters();
-    updateConfig({
-      showPinyin: false,
-      showGrid: true,
-      gridLineColor: '#cbd5e1',
-      showStrokeGuide: false,
-    });
-  };
 
   return (
     <aside className="sticky top-0 flex h-screen w-96 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white px-5 py-6">
@@ -448,12 +355,10 @@ export const SidebarLayout = () => {
       </div>
 
       <div className="space-y-4">
-        <PresetSelector activePreset={activePreset} onSelect={applyPreset} />
-
       <section className="space-y-5 rounded-xl border border-slate-200 bg-slate-100/80 p-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-950">字帖内容</h2>
-          <p className="mt-1 text-xs text-slate-500">筛选教材生字并设置拼音轨道</p>
+          <p className="mt-1 text-xs text-slate-500">筛选教材生字并管理练习内容</p>
         </div>
         <TextbookSelector />
         <CharacterPicker />
@@ -481,7 +386,6 @@ export const SidebarLayout = () => {
         >
           <div className="overflow-hidden">
             <div className="space-y-4 pb-1">
-              <PinyinConfigControl />
               <VisualConfigPanel />
             </div>
           </div>

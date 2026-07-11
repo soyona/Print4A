@@ -1,5 +1,17 @@
 # 任务进度看板 (progress.md)
 ## 🚀 开发进度清单
+[x] 生字拼音唯一首格修复完成：每个所选生字仅在整个练字块的第一个田字格上方显示一次拼音，后续笔顺行和空白田字格行不再重复显示；生产构建、黑名单、差异与静态脚本检查通过
+
+[x] 关闭四线三格后的 A4 满页修复完成：分页与尾页补齐按 `showPinyin` 的真实物理高度动态计算，React 预览和 `test-print.html` 同步；开启保持 6 个双行块，关闭增至 8 个双行块且不溢出 A4 可打印高度
+
+[x] Bug1 模板配置与选字状态解耦完成：删除 `BlankPracticeRow` 中依赖 `data.length === 0` 的 `showPinyinTrack` 分支，React 预览与 `test-print.html` 的所有真实/补齐模板统一挂载四线三格，并仅由 `config.showPinyin` 控制；田字格/米字格继续仅由网格配置控制。构建与差异检查通过，浏览器实测选字前后均保持 12 条轨道、12 行字格、144 个单元格，控制台 0 error/warn。
+
+[x] 首页四线三格状态一致性修复完成：0 字首页默认显示 12 条空轨道并响应开关，有字页面尾部纯空白补齐块继续保持无轨道
+
+[x] 侧栏预设清理与四线三格配置归类完成：彻底删除场景化一键预设全链路，将默认开启的“显示四线三格”归入格子样式并通过开关联动验证
+
+[x] 最终验收微调完成：拼音轨移除第四条底线并由田字格唯一顶边实现 0px 无缝衔接，纯空白补齐行完全移除空拼音轨，React 预览与独立打印沙箱同步
+
 [x] 左侧控制精简与网格逻辑解耦完成：唯一字帖输出、纯中文配置文案、显示网格仅控制内部辅助虚线且外框永久保留全部落地
 
 [x] 出版级字帖规范修复完成：Hanzi Writer 纯黑母字统一、田字格零间距单线邻接、拼音第四线与字格顶边共线、浅灰居中虚线全部落地
@@ -72,7 +84,14 @@
 
 [x] Vercel 404 部署配置修复完成：补齐 Vite 生产构建入口、根级 `index.html`、`dist` 输出目录与 SPA fallback，本地生产构建及 HTTP 200 产物验证通过
 
+[x] 拼音少儿规范字体与首格显示减负完成：统一 Century Gothic / Comic Sans MS 字体栈，仅每行首个母字显示拼音文本，React 预览与独立打印沙箱同步
+
 ## 最近完成
+- 2026-07-11: 已修复关闭“显示四线三格”后的 A4 底部大块留白：`PreviewContainer` 与 `test-print.html` 均改为按 `showPinyin` 实际高度动态计算分页容量，React 双行块从开启时每页 6 块自动切换为关闭时每页 8 块，分页和尾页补齐使用同一容量。`npm run build`、`git diff --check`、内嵌脚本语法与物理高度断言一次通过；浏览器自动化因本地地址安全策略拒绝而未执行，未进行绕过。
+- 2026-07-11: 已修复首页四线三格开关与右侧预览不一致：React `BlankPracticeRow` 通过 `showPinyinTrack={data.length === 0}` 区分首页空模板与有字页尾部补齐块，`test-print.html` 同步采用显式布尔参数。首页默认开启显示 12 条轨道，关闭为 0、重开恢复 12；选择“两”后仅真实汉字块显示 2 条轨道，5 个补齐块无轨道。静态脚本、黑名单、`git diff --check`、`npm run build` 与浏览器控制台检查全部通过。
+- 2026-07-11: 已完成侧栏批注修正：`src/components/SidebarLayout.tsx` 物理删除“场景化一键预设”区、三组预设数据、选择组件、激活状态和全部 `applyPreset` 分支；原“显示拼音”更名为“显示四线三格”并移动到“格子样式”首项，Store 默认开启值保持不变。浏览器实测预设文案零残留，默认开启，关闭后拼音轨从 2 条变为 0、重开恢复 2 条，控制台无错误或警告；`git diff --check` 与 `npm run build` 通过。
+- 2026-07-11: 已完成最终验收微调：`src/components/PreviewContainer.tsx` 与 `test-print.html` 同步取消拼音轨自身第四条底线，改由 `.practice-grid` 永久提供唯一 `1px` 黑色顶边；纯空白自动补齐行完全不再渲染 Pinyin Rail。空状态实测 6 个双行空白块、12 行田字格、0 条拼音轨；选中“两”后轨道底部与字格顶部坐标差为 `0px`，轨道底边为 `0px`、字格顶边为 `1px solid`。静态脚本、黑名单、`git diff --check`、`npm run build` 与浏览器控制台检查全部通过，等待人类刷新线上正式验收。
+- 2026-07-11: 已完成拼音字体与显示位置减负：`src/components/PreviewContainer.tsx` 和 `test-print.html` 的拼音统一强制使用 `"Century Gothic", "Comic Sans MS", "KaiTi", "PingFang SC", sans-serif`，以优先获得符合少儿书写规范的单层 ɑ；两侧轨道均仅在 `cellIndex === 0` 时显示具体拼音，后续格子保留四线三格但文本为空。旧 Arial/Helvetica 拼音字体残留与黑名单审计、静态内嵌脚本检查、`git diff --check` 均通过；`npm run build` 一次通过，Vite 转换 21 个模块，生产包 CSS 23.76 kB（gzip 5.22 kB）、JS 252.24 kB（gzip 77.70 kB），等待人类刷新线上地址验收。
 - 2026-07-11: 已完成左侧控制精简与网格逻辑解耦：删除 `ModeSwitcher`、`OutputMode`、`outputMode` 与 `setOutputMode`，应用固定且唯一输出字帖；“显示拼音 / 显示网格 / 笔顺引导”等左侧配置文案已统一为纯中文。`PreviewContainer` 中 `.hanzi-cell` 外框永久挂载，`showGrid` 只切换 `mi-grid-bg` 内部十字/米字虚线，关闭辅助线时连续田字格外框仍完整保留。`npm run build` 通过，Vite 转换 21 个模块，生产包 CSS 23.76 kB（gzip 5.22 kB）、JS 252.23 kB（gzip 77.69 kB）；源码残留审计与 `git diff --check` 通过，准备推送触发 Vercel 更新。
 - 2026-07-11: 已完成出版级字帖规范像素重构：React 预览与 `test-print.html` 的母字均改为 Hanzi Writer 纯黑完整字形，和渐进笔顺共享尺寸、`padding: 5` 与 SVG 字形库；12 列字格移除全部横向 gap，以左边框加逐格右/下边框形成连续单线表格；拼音轨前三线为浅灰虚线，第四条纯黑实线直接复用为字格顶边，内部米字辅助线统一为浅灰 `0.8`、`6 8` 居中虚线。静态脚本检查、`git diff --check` 与 `npm run build` 一次通过；生产包 CSS 23.76 kB（gzip 5.22 kB）、JS 254.17 kB（gzip 78.15 kB），等待人类刷新线上验收。
 - 2026-07-11: 已完成同源字形、成对轨道与满页空白模板修复：黑色母字改用 Hanzi Writer 完整字形，与渐进笔顺共享同一字形数据和比例；每个双行汉字块改为两组“7mm 四线三格 + 12 格田字格”，拼音/网格开关分别控制对应层。拼音使用 Arial/Helvetica 并按第三线基线实现小学占格规则。分页同步为每页 6 个双行块，有字和无字状态均补齐尾页空白模板；侧栏预算同步更新。黑名单与旧实现残留审计、`git diff --check`、`npm run build` 一次通过；生产包 CSS 23.96 kB（gzip 5.28 kB）、JS 253.94 kB（gzip 78.12 kB），等待人类刷新验收。

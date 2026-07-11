@@ -12,11 +12,15 @@ const a4PageWidthMm = 210;
 const a4PageHorizontalPaddingMm = 24;
 const practiceCellSizeMm =
   (a4PageWidthMm - a4PageHorizontalPaddingMm) / practiceCellsPerRow;
-const practiceRowHeightMm = (practicePinyinTrackHeightMm + practiceCellSizeMm) * 2 + practiceRowGapMm;
-const practiceRowsPerPage = Math.floor(
-  (a4PageHeightMm - a4PageVerticalPaddingMm + practiceRowGapMm) /
-    (practiceRowHeightMm + practiceRowGapMm),
-);
+const getPracticeRowsPerPage = (showPinyin: boolean): number => {
+  const pinyinTrackHeightMm = showPinyin ? practicePinyinTrackHeightMm : 0;
+  const practiceRowHeightMm = (pinyinTrackHeightMm + practiceCellSizeMm) * 2 + practiceRowGapMm;
+
+  return Math.floor(
+    (a4PageHeightMm - a4PageVerticalPaddingMm + practiceRowGapMm) /
+      (practiceRowHeightMm + practiceRowGapMm),
+  );
+};
 const paleStrokeColor = '#f1f5f9';
 
 const previewPrintStyles = `
@@ -57,7 +61,7 @@ const previewPrintStyles = `
     position: absolute;
     inset-inline: 0;
     bottom: calc(33.333% - 1px);
-    font-family: Arial, "Helvetica Neue", sans-serif !important;
+    font-family: "Century Gothic", "Comic Sans MS", "KaiTi", "PingFang SC", sans-serif !important;
     font-size: 12px;
     font-weight: 600;
     line-height: 12px;
@@ -81,9 +85,6 @@ const previewPrintStyles = `
 
   .practice-grid {
     border-left: 1px solid #000000;
-  }
-
-  .practice-grid-without-pinyin {
     border-top: 1px solid #000000;
   }
 
@@ -262,7 +263,6 @@ const PinyinTrack = ({
         <div className="absolute inset-x-0 top-0 border-t border-dashed border-slate-300" />
         <div className="absolute inset-x-0 top-1/3 border-t border-dashed border-slate-300" />
         <div className="absolute inset-x-0 top-2/3 border-t border-dashed border-slate-300" />
-        <div className="absolute inset-x-0 bottom-0 border-t border-solid border-black" />
         <div
           className="relative grid h-full"
           style={{ gridTemplateColumns: `repeat(${cellCount}, minmax(0, 1fr))` }}
@@ -272,12 +272,9 @@ const PinyinTrack = ({
               key={`${rowId}-pinyin-${cellIndex}`}
               className="relative h-full"
             >
-              {character?.pinyin ? (
+              {cellIndex === 0 && character?.pinyin ? (
                 <span
-                  className={[
-                    'pinyin-text z-[1]',
-                    cellIndex === 0 ? 'text-slate-950' : 'text-slate-300',
-                  ].join(' ')}
+                  className="pinyin-text z-[1] text-slate-950"
                 >
                   {character.pinyin}
                 </span>
@@ -380,7 +377,13 @@ const PracticeCellView = ({ cell, config }: { cell: PracticeCell; config: Workbo
   </div>
 );
 
-const BlankPracticeRow = ({ config, rowIndex }: { config: WorkbookConfig; rowIndex: number }) => {
+const BlankPracticeRow = ({
+  config,
+  rowIndex,
+}: {
+  config: WorkbookConfig;
+  rowIndex: number;
+}) => {
   const rowId = `blank-practice-row-${rowIndex}`;
 
   return (
@@ -389,7 +392,7 @@ const BlankPracticeRow = ({ config, rowIndex }: { config: WorkbookConfig; rowInd
         <div key={`${rowId}-pair-${gridRowIndex}`} className={gridRowIndex === 0 ? '' : 'mt-[0.25mm]'}>
           <PinyinTrack cellCount={practiceCellsPerRow} config={config} rowId={`${rowId}-${gridRowIndex}`} />
           <div
-            className={`practice-grid grid w-full ${config.showPinyin ? '' : 'practice-grid-without-pinyin'}`}
+            className="practice-grid grid w-full"
             style={{ gridTemplateColumns: `repeat(${practiceCellsPerRow}, minmax(0, 1fr))` }}
           >
             {Array.from({ length: practiceCellsPerRow }, (_, cellIndex) => (
@@ -427,12 +430,12 @@ const CharacterPracticeBlock = ({
         <div key={`${character.id}-pair-${gridRowIndex}`} className={gridRowIndex === 0 ? '' : 'mt-[0.25mm]'}>
           <PinyinTrack
             cellCount={practiceCellsPerRow}
-            character={character}
+            character={gridRowIndex === 0 ? character : undefined}
             config={config}
             rowId={`${character.id}-${gridRowIndex}`}
           />
           <div
-            className={`practice-grid grid w-full ${config.showPinyin ? '' : 'practice-grid-without-pinyin'}`}
+            className="practice-grid grid w-full"
             style={{ gridTemplateColumns: `repeat(${practiceCellsPerRow}, minmax(0, 1fr))` }}
           >
             {rowCells.map((cell) => (
@@ -445,27 +448,32 @@ const CharacterPracticeBlock = ({
   );
 };
 
-const PracticeCanvas = ({ config, data, strokeCounts }: PracticeCanvasProps) => (
-  <div className="flex h-full flex-col gap-[0.25mm]">
-    {data.map((character) => (
+const PracticeCanvas = ({ config, data, strokeCounts }: PracticeCanvasProps) => {
+  const practiceRowsPerPage = getPracticeRowsPerPage(config.showPinyin);
+
+  return (
+    <div className="flex h-full flex-col gap-[0.25mm]">
+      {data.map((character) => (
           <CharacterPracticeBlock
             key={character.id}
             character={character}
             config={config}
             strokeCount={strokeCounts[character.id] ?? 0}
           />
-        ))}
-    {Array.from({ length: Math.max(0, practiceRowsPerPage - data.length) }, (_, rowIndex) => (
-      <BlankPracticeRow
-        key={`page-blank-practice-row-${data.length}-${rowIndex}`}
-        config={config}
-        rowIndex={data.length + rowIndex}
-      />
-    ))}
-  </div>
-);
+      ))}
+      {Array.from({ length: Math.max(0, practiceRowsPerPage - data.length) }, (_, rowIndex) => (
+        <BlankPracticeRow
+          key={`page-blank-practice-row-${data.length}-${rowIndex}`}
+          config={config}
+          rowIndex={data.length + rowIndex}
+        />
+      ))}
+    </div>
+  );
+};
 
 const A4PageLayout = ({ config, strokeCounts, targetCharacters }: A4PageLayoutProps) => {
+  const practiceRowsPerPage = getPracticeRowsPerPage(config.showPinyin);
   const pages = chunkItems(targetCharacters, practiceRowsPerPage);
 
   return (
