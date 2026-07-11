@@ -20,7 +20,7 @@ export interface CharacterMeta {
   id: string;            // 汉字唯一ID
   char: string;          // 汉字单字 (例如: "明")
   pinyin: string;        // 标准拼音带声调 (例如: "míng")
-  strokes: string[];     // 笔顺分解路径或静态图URL列表 (例如: ["一", "ノ", ...])
+  strokes: string[];     // 兼容保留字段；笔顺矢量数据由 Hanzi Writer 引擎按 char 加载
   components: string[];  // 自动拆解后的核心部件/偏旁列表 (例如: ["日", "月"])
   version: TextbookVersion;
   grade: GradeLevel;
@@ -33,10 +33,15 @@ export interface CharacterMeta {
  */
 export interface WorkbookConfig {
   showGrid: boolean;         // 是否开启田字格底纹
+  gridType: 'MI' | 'TIAN';   // 米字格 / 田字格
+  gridLineWidth: number;     // 内部辅助线粗细
+  gridLineColor: string;     // 内部辅助线颜色 HEX 值
   showPinyin: boolean;       // 是否显示拼音标注
   showStrokeGuide: boolean;  // 是否开启笔顺分解图引导
   textColor: string;         // 汉字文本颜色 HEX 值
   traceColor: string;        // 描红文本颜色 HEX 值
+  traceCellsCount: number;   // 渐进描红格子数
+  emptyCellsCount: number;   // 纯空练习格子数
 }
 
 /**

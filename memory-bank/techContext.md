@@ -1,5 +1,11 @@
-# 技术栈与依赖约束 (techContext.md V2.0.0-Matrix)
 
+# 技术栈与依赖约束 (techContext.md V2.1.0-Kernel)
+
+## ⚖️ 架构师核心技术选型论证 (Arch Review)
+- **人类审查状态**: APPROVED
+- **本领域核心难题**: Web 汉字笔顺矢量渐进渲染与物理字形路径暴露限制
+- **本次研发上游资产**: `product-assets/research/tech-review.md`
+- 
 ## 🎯 1. 契约语言层 (The Contract Layer)
 - 强制标准：TypeScript (或对应原生的强类型层)，严禁编写隐式 any。
 
@@ -13,6 +19,12 @@
 ## 🛑 4. 严禁引入的依赖黑名单 (Negative Constraints)
 - 严禁引入任何外部复杂状态库（如 Redux），仅允许使用 React Context。\n- 严禁破坏单页应用（SPA）的标准轻量路由结构。
 
-## ⚙️ 5. 编译命令与宿主路由控制
+## 🛑 5. 唯一准入核心依赖/技术白名单 (Whitelist)
+- `META_WHITELIST` : [ "hanzi-writer" ]
+
+## ❌ 6. 动态关联动态审计黑名单 (Blacklist)
+- `META_BLACKLIST` : [ "font-face拼凑方案", "CSS绝对定位堆叠方案", "其他第三方笔顺库" ]
+
+## ⚙️ 7. 编译命令与宿主路由控制
 - 本地静态编译验证命令: `npm run dev / npm run build`[cite: 8]
 - 本地开发网络边界: 允许的开发源 localhost[cite: 8]

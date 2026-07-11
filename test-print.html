@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PrintA4 真机打印验证沙箱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      :root {
+        color-scheme: light;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        background: #f1f5f9;
+        color: #020617;
+      }
+
+      .a4-page {
+        width: 210mm;
+        height: 297mm;
+        page-break-after: always;
+        break-after: page;
+        font-family: "Kaiti", "STKaiti", "华文楷体", "楷体", serif !important;
+      }
+
+      .a4-page * {
+        font-family: "Kaiti", "STKaiti", "华文楷体", "楷体", serif !important;
+      }
+
+      .a4-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+
+      .practice-char {
+        font-family: "Kaiti", "STKaiti", "华文楷体", "楷体", serif !important;
+      }
+
+      .practice-row {
+        font-family: "Kaiti", "STKaiti", "华文楷体", "楷体", serif !important;
+      }
+
+      .mi-grid-bg {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100 M0 0L100 100 M100 0L0 100' stroke='%23cbd5e1' stroke-width='0.8' stroke-dasharray='6 6' fill='none'/%3E%3C/svg%3E");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+      }
+
+      .hanzi-cell {
+        border: 1px solid #64748b !important;
+        border-radius: 0;
+        box-sizing: border-box;
+      }
+
+      .hanzi-writer-target,
+      .hanzi-writer-target svg {
+        display: block;
+        height: 100%;
+        width: 100%;
+      }
+
+      @media print {
+        html,
+        body {
+          width: 210mm;
+          min-height: 297mm;
+          margin: 0;
+          background: #ffffff !important;
+        }
+
+        body * {
+          visibility: hidden;
+        }
+
+        .print-root,
+        .print-root * {
+          visibility: visible;
+        }
+
+        .print-root {
+          position: absolute;
+          inset: 0 auto auto 0;
+          width: 210mm;
+          margin: 0;
+          padding: 0;
+          background: #ffffff !important;
+        }
+
+        .print-action-bar,
+        .screen-only,
+        .sidebar {
+          display: none !important;
+        }
+
+        .a4-page {
+          width: 210mm !important;
+          height: 297mm !important;
+          margin: 0 !important;
+          box-shadow: none !important;
+          transform: none !important;
+          page-break-after: always;
+          break-after: page;
+        }
+
+        .a4-page:last-child {
+          page-break-after: auto;
+          break-after: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flex min-h-screen bg-slate-100 text-slate-950">
+      <aside
+        class="sidebar sticky top-0 flex h-screen w-80 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-slate-50 px-5 py-6"
+      >
+        <div class="mb-6">
+          <h1 class="text-base font-semibold text-slate-950">A4 生字控制台</h1>
+          <p class="mt-1 text-xs font-medium text-slate-500">test-print.html 独立真机验证通道</p>
+        </div>
+
+        <section class="space-y-4 border-b border-slate-200 pb-5">
+          <h2 class="text-sm font-semibold text-slate-950">输出模式</h2>
+          <div class="grid grid-cols-2 gap-2 rounded-md bg-slate-200 p-1">
+            <button
+              id="mode-practice"
+              class="h-10 rounded-md text-sm font-semibold transition"
+              type="button"
+              data-mode="PRACTICE"
+            >
+              字帖
+            </button>
+            <button
+              id="mode-puzzle"
+              class="h-10 rounded-md text-sm font-semibold transition"
+              type="button"
+              data-mode="PUZZLE"
+            >
+              拼图
+            </button>
+          </div>
+        </section>
+
+        <section class="space-y-4 border-b border-slate-200 py-5">
+          <h2 class="text-sm font-semibold text-slate-950">教材筛选</h2>
+
+          <label class="block space-y-2">
+            <span class="text-xs font-medium text-slate-500">年级</span>
+            <select
+              id="grade-select"
+              class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            ></select>
+          </label>
+
+          <label class="block space-y-2">
+            <span class="text-xs font-medium text-slate-500">学期</span>
+            <select
+              id="semester-select"
+              class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            ></select>
+          </label>
+
+          <label class="block space-y-2">
+            <span class="text-xs font-medium text-slate-500">单元</span>
+            <select
+              id="unit-select"
+              class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            ></select>
+          </label>
+        </section>
+
+        <section class="space-y-4 border-b border-slate-200 py-5">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="text-sm font-semibold text-slate-950">生字选择</h2>
+            <span id="visible-count" class="text-xs font-medium text-slate-500">0 字</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              id="select-all"
+              class="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              type="button"
+            >
+              全选
+            </button>
+            <button
+              id="clear-all"
+              class="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              type="button"
+            >
+              清空
+            </button>
+          </div>
+
+          <div id="character-picker" class="grid grid-cols-4 gap-2"></div>
+          <div
+            id="empty-character-state"
+            class="hidden rounded-md border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-sm text-slate-500"
+          >
+            当前筛选暂无生字
+          </div>
+        </section>
+
+        <section class="space-y-4 pt-5">
+          <h2 class="text-sm font-semibold text-slate-950">字帖配置</h2>
+          <label class="flex items-center justify-between gap-3 text-sm font-medium text-slate-700">
+            <span>显示田字格</span>
+            <input id="show-grid" class="h-4 w-4 accent-slate-950" type="checkbox" />
+          </label>
+          <label class="flex items-center justify-between gap-3 text-sm font-medium text-slate-700">
+            <span>显示拼音</span>
+            <input id="show-pinyin" class="h-4 w-4 accent-slate-950" type="checkbox" />
+          </label>
+          <label class="flex items-center justify-between gap-3 text-sm font-medium text-slate-700">
+            <span>显示笔顺</span>
+            <input id="show-stroke-guide" class="h-4 w-4 accent-slate-950" type="checkbox" />
+          </label>
+          <label class="block space-y-2">
+            <span class="text-xs font-medium text-slate-500">正文颜色</span>
+            <input id="text-color" class="h-10 w-full rounded-md border border-slate-200 bg-white" type="color" />
+          </label>
+          <label class="block space-y-2">
+            <span class="text-xs font-medium text-slate-500">描红颜色</span>
+            <input id="trace-color" class="h-10 w-full rounded-md border border-slate-200 bg-white" type="color" />
+          </label>
+          <label class="block space-y-2">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm font-medium text-slate-700">渐进描红格</span>
+              <input
+                id="trace-cells-count"
+                class="h-9 w-16 rounded-md border border-slate-200 bg-white px-2 text-center text-sm font-semibold text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                type="number"
+                min="0"
+                max="20"
+              />
+            </div>
+            <input id="trace-cells-range" class="w-full accent-slate-950" type="range" min="0" max="20" />
+          </label>
+          <label class="block space-y-2">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm font-medium text-slate-700">空白练习格</span>
+              <input
+                id="empty-cells-count"
+                class="h-9 w-16 rounded-md border border-slate-200 bg-white px-2 text-center text-sm font-semibold text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                type="number"
+                min="0"
+                max="20"
+              />
+            </div>
+            <input id="empty-cells-range" class="w-full accent-slate-950" type="range" min="0" max="20" />
+          </label>
+        </section>
+      </aside>
+
+      <main class="min-h-screen flex-1 bg-slate-100">
+        <div
+          class="print-action-bar sticky top-0 z-10 flex items-center justify-between border-b border-amber-200 bg-amber-50 px-6 py-4 shadow-sm"
+        >
+          <div>
+            <div class="text-sm font-semibold text-amber-950">A4 实时预览</div>
+            <div class="text-xs font-medium text-amber-700">原生打印输出已锁定 210mm x 297mm</div>
+          </div>
+          <button
+            id="print-button"
+            class="h-10 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+            type="button"
+          >
+            一键打印
+          </button>
+        </div>
+
+        <div class="overflow-auto px-8 pb-10">
+          <div class="screen-only mx-auto flex max-w-[210mm] items-center justify-between pt-6 text-xs font-medium text-slate-500">
+            <span id="mode-label">字帖练习模式</span>
+            <span id="selected-count">0 个汉字</span>
+          </div>
+          <div id="print-root" class="print-root mx-auto flex flex-col items-center gap-8 py-8 print:block print:p-0"></div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const a4PageHeightMm = 297;
+      const a4PageVerticalPaddingMm = 24;
+      const practicePinyinTrackHeightMm = 7;
+      const practiceRowGapMm = 0.25;
+      const practiceCellGapMm = 1.2;
+      const practiceCellsPerRow = 12;
+      const a4PageWidthMm = 210;
+      const a4PageHorizontalPaddingMm = 24;
+      const practiceCellSizeMm =
+        (a4PageWidthMm -
+          a4PageHorizontalPaddingMm -
+          practiceCellGapMm * (practiceCellsPerRow - 1)) /
+        practiceCellsPerRow;
+      const practiceRowHeightMm = practicePinyinTrackHeightMm + practiceCellSizeMm;
+      const practiceRowsPerPage = Math.floor(
+        (a4PageHeightMm - a4PageVerticalPaddingMm + practiceRowGapMm) /
+          (practiceRowHeightMm + practiceRowGapMm),
+      );
+      const traceCellsPerRow = 8;
+      const puzzlePiecesPerPage = 36;
+      const paleStrokeColor = "#e2e8f0";
+      let activeHanziWriters = [];
+
+      const mockCharacterPool = [
+        {
+          id: "pep-1-up-1-ming",
+          char: "明",
+          pinyin: "míng",
+          strokes: [],
+          components: ["日", "月"],
+          version: "PEP",
+          grade: "1",
+          semester: "UP",
+          unit: 1,
+        },
+        {
+          id: "pep-3-up-4-ying",
+          char: "赢",
+          pinyin: "yíng",
+          strokes: [],
+          components: ["亡", "口", "月", "贝", "凡"],
+          version: "PEP",
+          grade: "3",
+          semester: "UP",
+          unit: 4,
+        },
+        {
+          id: "pep-1-down-2-lin",
+          char: "林",
+          pinyin: "lín",
+          strokes: [],
+          components: ["木", "木"],
+          version: "PEP",
+          grade: "1",
+          semester: "DOWN",
+          unit: 2,
+        },
+      ];
+
+      const listeners = new Set();
+
+      let state = {
+        filter: {
+          version: "PEP",
+          grade: "1",
+          semester: "UP",
+          selectedUnit: null,
+        },
+        characterPool: mockCharacterPool,
+        selectedCharIds: new Set(),
+        outputMode: "PRACTICE",
+        config: {
+          showGrid: true,
+          showPinyin: true,
+          showStrokeGuide: true,
+          textColor: "#111827",
+          traceColor: "#4b5563",
+          traceCellsCount: 8,
+          emptyCellsCount: 0,
+        },
+      };
+
+      const emitChange = () => {
+        listeners.forEach((listener) => listener());
+      };
+
+      const setState = (updater) => {
+        state = updater(state);
+        emitChange();
+      };
+
+      const store = {
+        getState: () => state,
+        subscribe: (listener) => {
+          listeners.add(listener);
+          return () => listeners.delete(listener);
+        },
+        setFilter: (updater) => {
+          setState((current) => {
+            const gradeChanged = updater.grade !== undefined && updater.grade !== current.filter.grade;
+            const semesterChanged = updater.semester !== undefined && updater.semester !== current.filter.semester;
+            const shouldResetUnit = (gradeChanged || semesterChanged) && updater.selectedUnit === undefined;
+            const nextFilter = {
+              ...current.filter,
+              ...updater,
+              selectedUnit: shouldResetUnit ? null : updater.selectedUnit ?? current.filter.selectedUnit,
+            };
+
+            return {
+              ...current,
+              filter: nextFilter,
+              selectedCharIds: new Set(),
+            };
+          });
+        },
+        toggleCharacter: (id) => {
+          setState((current) => {
+            const selectedCharIds = new Set(current.selectedCharIds);
+
+            if (selectedCharIds.has(id)) {
+              selectedCharIds.delete(id);
+            } else {
+              selectedCharIds.add(id);
+            }
+
+            return {
+              ...current,
+              selectedCharIds,
+            };
+          });
+        },
+        selectAllCharacters: (ids) => {
+          setState((current) => ({
+            ...current,
+            selectedCharIds: new Set(ids),
+          }));
+        },
+        clearAllCharacters: () => {
+          setState((current) => ({
+            ...current,
+            selectedCharIds: new Set(),
+          }));
+        },
+        setOutputMode: (mode) => {
+          setState((current) => ({
+            ...current,
+            outputMode: mode,
+          }));
+        },
+        updateConfig: (updater) => {
+          setState((current) => ({
+            ...current,
+            config: {
+              ...current.config,
+              ...updater,
+            },
+          }));
+        },
+      };
+
+      const gradeOptions = ["1", "2", "3", "4", "5", "6"];
+      const semesterOptions = [
+        { label: "上册", value: "UP" },
+        { label: "下册", value: "DOWN" },
+      ];
+
+      const getFilteredCharacters = (characterPool, filter) =>
+        characterPool.filter((character) => {
+          const matchesBaseFilter =
+            character.version === filter.version &&
+            character.grade === filter.grade &&
+            character.semester === filter.semester;
+
+          if (!matchesBaseFilter) {
+            return false;
+          }
+
+          return filter.selectedUnit === null || character.unit === filter.selectedUnit;
+        });
+
+      const getUnitOptions = (characterPool, filter) => {
+        const units = characterPool
+          .filter(
+            (character) =>
+              character.version === filter.version &&
+              character.grade === filter.grade &&
+              character.semester === filter.semester,
+          )
+          .map((character) => character.unit);
+
+        return Array.from(new Set(units)).sort((first, second) => first - second);
+      };
+
+      const getSelectedCharacters = (characterPool, selectedCharIds) =>
+        characterPool.filter((character) => selectedCharIds.has(character.id));
+
+      const getPuzzlePieces = (characters) =>
+        characters.flatMap((character) =>
+          character.components.map((component, index) => ({
+            id: `${character.id}-piece-${index}`,
+            sourceChar: character.char,
+            value: component,
+          })),
+        );
+
+      const chunkItems = (items, pageSize) => {
+        if (items.length === 0) {
+          return [[]];
+        }
+
+        const pages = [];
+
+        for (let startIndex = 0; startIndex < items.length; startIndex += pageSize) {
+          pages.push(items.slice(startIndex, startIndex + pageSize));
+        }
+
+        return pages;
+      };
+
+      const escapeHtml = (value) =>
+        String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+
+      const clampConfigCount = (value) => Math.min(Math.max(Math.round(Number(value)), 0), 20);
+
+      const getPracticeCells = (character, config) => {
+        const traceSlots = config.showStrokeGuide ? traceCellsPerRow : 0;
+
+        return Array.from({ length: practiceCellsPerRow }, (_, cellIndex) => ({
+          id: `${character.id}-practice-cell-${cellIndex}`,
+          character,
+          role: cellIndex === 0 ? "MASTER" : cellIndex <= traceSlots ? "TRACE" : "EMPTY",
+          traceStep: cellIndex,
+        }));
+      };
+
+      const renderGradeOptions = () => {
+        const gradeSelect = document.getElementById("grade-select");
+        gradeSelect.innerHTML = gradeOptions
+          .map((grade) => `<option value="${grade}">${grade}年级</option>`)
+          .join("");
+      };
+
+      const renderSemesterOptions = () => {
+        const semesterSelect = document.getElementById("semester-select");
+        semesterSelect.innerHTML = semesterOptions
+          .map((semester) => `<option value="${semester.value}">${semester.label}</option>`)
+          .join("");
+      };
+
+      const renderUnitOptions = (unitOptions, selectedUnit) => {
+        const unitSelect = document.getElementById("unit-select");
+        const options = [
+          '<option value="ALL">全册</option>',
+          ...unitOptions.map((unit) => `<option value="${unit}">第${unit}单元</option>`),
+        ];
+
+        unitSelect.innerHTML = options.join("");
+        unitSelect.value = selectedUnit === null ? "ALL" : String(selectedUnit);
+      };
+
+      const renderModeButtons = (outputMode) => {
+        document.querySelectorAll("[data-mode]").forEach((button) => {
+          const isActive = button.dataset.mode === outputMode;
+          button.setAttribute("aria-pressed", String(isActive));
+          button.className = [
+            "h-10 rounded-md text-sm font-semibold transition",
+            isActive ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950",
+          ].join(" ");
+        });
+      };
+
+      const renderCharacterPicker = (visibleCharacters, selectedCharIds) => {
+        const picker = document.getElementById("character-picker");
+        const emptyState = document.getElementById("empty-character-state");
+
+        picker.innerHTML = visibleCharacters
+          .map((character) => {
+            const isSelected = selectedCharIds.has(character.id);
+            const className = [
+              "aspect-square rounded-md border text-2xl font-semibold transition",
+              isSelected
+                ? "border-slate-950 bg-slate-950 text-white"
+                : "border-slate-200 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50",
+            ].join(" ");
+
+            return `<button class="${className}" type="button" aria-pressed="${isSelected}" data-character-id="${character.id}">${escapeHtml(character.char)}</button>`;
+          })
+          .join("");
+
+        emptyState.classList.toggle("hidden", visibleCharacters.length !== 0);
+      };
+
+      const renderPinyinTrack = (character, config, cellCount) =>
+        `<div class="relative h-[7mm]">
+          ${
+            config.showPinyin
+              ? `<div class="absolute inset-x-0 top-0 border-t border-dashed border-[#cbd5e1]"></div>
+                <div class="absolute inset-x-0 top-1/3 border-t border-dashed border-[#cbd5e1]"></div>
+                <div class="absolute inset-x-0 top-2/3 border-t border-dashed border-[#cbd5e1]"></div>
+                <div class="absolute inset-x-0 bottom-0 border-t border-dashed border-[#cbd5e1]"></div>
+                <div class="relative grid h-full gap-x-[1.2mm]" style="grid-template-columns: repeat(${cellCount}, minmax(0, 1fr));">
+                  ${Array.from({ length: cellCount }, (_, cellIndex) =>
+                    `<div class="flex h-full items-center justify-center pb-[0.1mm] text-[10px] font-medium leading-none ${cellIndex === 0 ? "text-slate-950" : "text-slate-300"}">${character ? escapeHtml(character.pinyin) : ""}</div>`,
+                  ).join("")}
+                </div>`
+              : ""
+          }
+        </div>`;
+
+      const renderHanziGlyph = (char, color) =>
+        `<span class="practice-char relative text-[3.35rem] font-normal leading-none" style="color: ${escapeHtml(color)}">${escapeHtml(char)}</span>`;
+
+      const renderTraceContent = (cell, config) => {
+        if (!config.showStrokeGuide || cell.role !== "TRACE") {
+          return "";
+        }
+
+        return `<div
+          class="hanzi-writer-target aspect-square w-[88%] pointer-events-none mx-auto"
+          data-hanzi="${escapeHtml(cell.character.char)}"
+          data-trace-step="${cell.traceStep}"
+          data-trace-color="${escapeHtml(config.traceColor || "#4b5563")}"
+          aria-label="${escapeHtml(cell.character.char)} 前 ${cell.traceStep} 笔描红"
+        ></div>`;
+      };
+
+      const renderPracticeCell = (cell, config) =>
+        `<div class="hanzi-cell relative flex aspect-square min-w-0 items-center justify-center overflow-hidden bg-white ${config.showGrid ? "mi-grid-bg" : ""}">
+          ${
+            cell.role === "MASTER"
+              ? renderHanziGlyph(cell.character.char, "#000000")
+              : renderTraceContent(cell, config)
+          }
+        </div>`;
+
+      const destroyHanziWriters = () => {
+        activeHanziWriters.forEach((writer) => writer.cancelQuiz());
+        activeHanziWriters = [];
+      };
+
+      const initHanziWriters = () => {
+        if (!window.HanziWriter) {
+          return;
+        }
+
+        document.querySelectorAll(".hanzi-writer-target").forEach((target) => {
+          target.innerHTML = "";
+          const character = target.dataset.hanzi;
+          const traceStep = Number(target.dataset.traceStep || "1");
+          const traceColor = target.dataset.traceColor || "#4b5563";
+          const measuredSize = Math.max(56, Math.round(target.getBoundingClientRect().width || target.clientWidth || 72));
+          const writer = window.HanziWriter.create(target, character, {
+            width: measuredSize,
+            height: measuredSize,
+            padding: 5,
+            renderer: "svg",
+            showCharacter: false,
+            showOutline: true,
+            strokeColor: traceColor,
+            radicalColor: null,
+            outlineColor: paleStrokeColor,
+            highlightColor: traceColor,
+            drawingColor: traceColor,
+            strokeFadeDuration: 0,
+            drawingFadeDuration: 0,
+          });
+
+          writer.quiz({
+            quizStartStrokeNum: traceStep,
+            showHintAfterMisses: false,
+            highlightOnComplete: false,
+            markStrokeCorrectAfterMisses: false,
+          });
+          activeHanziWriters.push(writer);
+        });
+      };
+
+      const renderPracticeCanvas = (characters, config) =>
+        `<div class="flex h-full flex-col gap-[0.25mm]">
+          ${characters
+            .map(
+              (character) => {
+                const practiceCells = getPracticeCells(character, config);
+
+                return `
+                <div class="practice-row w-full">
+                  ${renderPinyinTrack(character, config, practiceCells.length)}
+                  <div class="grid w-full gap-x-[1.2mm]" style="grid-template-columns: repeat(${practiceCells.length}, minmax(0, 1fr));">
+                    ${practiceCells.map((cell) => renderPracticeCell(cell, config)).join("")}
+                  </div>
+                </div>
+              `;
+              },
+            )
+            .join("")}
+          ${Array.from({ length: Math.max(0, practiceRowsPerPage - characters.length) }, () => renderBlankPracticeRow(config)).join("")}
+        </div>`;
+
+      const renderBlankPracticeRow = (config) =>
+        `<div class="practice-row w-full">
+          ${renderPinyinTrack(null, config, practiceCellsPerRow)}
+          <div class="grid w-full gap-x-[1.2mm]" style="grid-template-columns: repeat(${practiceCellsPerRow}, minmax(0, 1fr));">
+            ${Array.from(
+              { length: practiceCellsPerRow },
+              () =>
+                `<div class="hanzi-cell relative aspect-square min-w-0 overflow-hidden bg-white ${config.showGrid ? "mi-grid-bg" : ""}" aria-hidden="true"></div>`,
+            ).join("")}
+          </div>
+        </div>`;
+
+      const renderEmptyPracticeCanvas = (config) =>
+        `<div class="flex h-full flex-col gap-[0.25mm]">
+          ${Array.from({ length: practiceRowsPerPage }, () => renderBlankPracticeRow(config)).join("")}
+        </div>`;
+
+      const renderPuzzleCanvas = (pieces) =>
+        `<div class="grid h-full grid-cols-6 auto-rows-fr gap-4">
+          ${pieces
+            .map(
+              (piece) => `
+                <div class="flex min-h-0 flex-col items-center justify-center border-2 border-dashed border-slate-500 bg-white">
+                  <span class="practice-char text-5xl font-semibold leading-none text-slate-950">${escapeHtml(piece.value)}</span>
+                  <span class="practice-char mt-3 text-xs font-medium text-slate-400">${escapeHtml(piece.sourceChar)}</span>
+                </div>
+              `,
+            )
+            .join("")}
+        </div>`;
+
+      const renderEmptyPreviewState = () =>
+        `<div class="screen-only flex h-full items-center justify-center border-2 border-dashed border-slate-200 bg-slate-50 text-sm font-medium text-slate-500">
+          请先在左侧选择需要打印的汉字
+        </div>`;
+
+      const renderA4Pages = (targetCharacters, mode, config) => {
+        const printRoot = document.getElementById("print-root");
+        destroyHanziWriters();
+        const puzzlePieces = getPuzzlePieces(targetCharacters);
+        const pages =
+          mode === "PRACTICE"
+            ? chunkItems(targetCharacters, practiceRowsPerPage)
+            : chunkItems(puzzlePieces, puzzlePiecesPerPage);
+
+        printRoot.innerHTML = pages
+          .map((pageItems) => {
+            const body =
+              pageItems.length === 0 && mode === "PRACTICE"
+                ? renderEmptyPracticeCanvas(config)
+                : pageItems.length === 0
+                  ? renderEmptyPreviewState()
+                : mode === "PRACTICE"
+                  ? renderPracticeCanvas(pageItems, config)
+                  : renderPuzzleCanvas(pageItems);
+
+            return `<section class="a4-page origin-top overflow-hidden bg-white p-[12mm] shadow-2xl ring-1 ring-slate-200 print:ring-0">${body}</section>`;
+          })
+          .join("");
+        initHanziWriters();
+      };
+
+      const syncFormControls = (currentState, visibleCharacters, selectedCharacters) => {
+        document.getElementById("grade-select").value = currentState.filter.grade;
+        document.getElementById("semester-select").value = currentState.filter.semester;
+        document.getElementById("visible-count").textContent = `${visibleCharacters.length} 字`;
+        document.getElementById("selected-count").textContent = `${selectedCharacters.length} 个汉字`;
+        document.getElementById("mode-label").textContent =
+          currentState.outputMode === "PRACTICE" ? "字帖练习模式" : "拼图游戏模式";
+        document.getElementById("show-grid").checked = currentState.config.showGrid;
+        document.getElementById("show-pinyin").checked = currentState.config.showPinyin;
+        document.getElementById("show-stroke-guide").checked = currentState.config.showStrokeGuide;
+        document.getElementById("text-color").value = currentState.config.textColor;
+        document.getElementById("trace-color").value = currentState.config.traceColor;
+        document.getElementById("trace-cells-count").value = String(currentState.config.traceCellsCount);
+        document.getElementById("trace-cells-range").value = String(currentState.config.traceCellsCount);
+        document.getElementById("empty-cells-count").value = String(currentState.config.emptyCellsCount);
+        document.getElementById("empty-cells-range").value = String(currentState.config.emptyCellsCount);
+      };
+
+      const render = () => {
+        const currentState = store.getState();
+        const unitOptions = getUnitOptions(currentState.characterPool, currentState.filter);
+        const visibleCharacters = getFilteredCharacters(currentState.characterPool, currentState.filter);
+        const selectedCharacters = getSelectedCharacters(currentState.characterPool, currentState.selectedCharIds);
+
+        renderUnitOptions(unitOptions, currentState.filter.selectedUnit);
+        renderModeButtons(currentState.outputMode);
+        renderCharacterPicker(visibleCharacters, currentState.selectedCharIds);
+        syncFormControls(currentState, visibleCharacters, selectedCharacters);
+        renderA4Pages(selectedCharacters, currentState.outputMode, currentState.config);
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        renderGradeOptions();
+        renderSemesterOptions();
+
+        document.getElementById("grade-select").addEventListener("change", (event) => {
+          store.setFilter({ grade: event.target.value });
+        });
+        document.getElementById("semester-select").addEventListener("change", (event) => {
+          store.setFilter({ semester: event.target.value });
+        });
+        document.getElementById("unit-select").addEventListener("change", (event) => {
+          store.setFilter({ selectedUnit: event.target.value === "ALL" ? null : Number(event.target.value) });
+        });
+        document.getElementById("select-all").addEventListener("click", () => {
+          const { characterPool, filter } = store.getState();
+          store.selectAllCharacters(getFilteredCharacters(characterPool, filter).map((character) => character.id));
+        });
+        document.getElementById("clear-all").addEventListener("click", () => {
+          store.clearAllCharacters();
+        });
+        document.getElementById("character-picker").addEventListener("click", (event) => {
+          const button = event.target.closest("[data-character-id]");
+
+          if (button) {
+            store.toggleCharacter(button.dataset.characterId);
+          }
+        });
+        document.querySelectorAll("[data-mode]").forEach((button) => {
+          button.addEventListener("click", () => {
+            store.setOutputMode(button.dataset.mode);
+          });
+        });
+        document.getElementById("show-grid").addEventListener("change", (event) => {
+          store.updateConfig({ showGrid: event.target.checked });
+        });
+        document.getElementById("show-pinyin").addEventListener("change", (event) => {
+          store.updateConfig({ showPinyin: event.target.checked });
+        });
+        document.getElementById("show-stroke-guide").addEventListener("change", (event) => {
+          store.updateConfig({ showStrokeGuide: event.target.checked });
+        });
+        document.getElementById("text-color").addEventListener("input", (event) => {
+          store.updateConfig({ textColor: event.target.value });
+        });
+        document.getElementById("trace-color").addEventListener("input", (event) => {
+          store.updateConfig({ traceColor: event.target.value });
+        });
+        document.getElementById("trace-cells-count").addEventListener("input", (event) => {
+          store.updateConfig({ traceCellsCount: clampConfigCount(event.target.value) });
+        });
+        document.getElementById("trace-cells-range").addEventListener("input", (event) => {
+          store.updateConfig({ traceCellsCount: clampConfigCount(event.target.value) });
+        });
+        document.getElementById("empty-cells-count").addEventListener("input", (event) => {
+          store.updateConfig({ emptyCellsCount: clampConfigCount(event.target.value) });
+        });
+        document.getElementById("empty-cells-range").addEventListener("input", (event) => {
+          store.updateConfig({ emptyCellsCount: clampConfigCount(event.target.value) });
+        });
+        document.getElementById("print-button").addEventListener("click", () => {
+          window.print();
+        });
+
+        store.subscribe(render);
+        render();
+      });
+    </script>
+  </body>
+</html>
