@@ -21,7 +21,6 @@ const practiceRowsPerPage = Math.floor(
   (a4PageHeightMm - a4PageVerticalPaddingMm + practiceRowGapMm) /
     (practiceRowHeightMm + practiceRowGapMm),
 );
-const traceCellsPerRow = 8;
 const puzzlePiecesPerPage = 36;
 const traceInkColor = '#1e3a8a';
 const paleStrokeColor = '#f1f5f9';
@@ -157,6 +156,7 @@ type PracticeCellRole = 'MASTER' | 'TRACE' | 'EMPTY';
 
 type PracticeCell = {
   id: string;
+  isFinalTrace: boolean;
   character: CharacterMeta;
   role: PracticeCellRole;
   traceStep: number;
@@ -191,13 +191,24 @@ const getPuzzlePieces = (characters: CharacterMeta[]): CharacterPiece[] =>
   );
 
 const getPracticeCells = (character: CharacterMeta, config: WorkbookConfig): PracticeCell[] => {
-  const traceSlots = config.showStrokeGuide ? traceCellsPerRow : 0;
+  const availablePracticeSlots = practiceCellsPerRow - 1;
+  const emptySlots = Math.min(
+    availablePracticeSlots,
+    Math.max(1, Math.round(config.emptyCellsCount)),
+  );
+  const traceSlots = config.showStrokeGuide
+    ? Math.min(
+        Math.max(0, Math.round(config.traceCellsCount)),
+        availablePracticeSlots - emptySlots,
+      )
+    : 0;
 
   return Array.from({ length: practiceCellsPerRow }, (_, cellIndex) => {
     const role: PracticeCellRole = cellIndex === 0 ? 'MASTER' : cellIndex <= traceSlots ? 'TRACE' : 'EMPTY';
 
     return {
       id: `${character.id}-practice-cell-${cellIndex}`,
+      isFinalTrace: role === 'TRACE' && cellIndex === traceSlots,
       character,
       role,
       traceStep: cellIndex,
@@ -308,8 +319,8 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
         height: measuredSize,
         padding: 5,
         renderer: 'svg',
-        showCharacter: false,
-        showOutline: true,
+        showCharacter: cell.isFinalTrace,
+        showOutline: !cell.isFinalTrace,
         strokeColor: traceInkColor,
         radicalColor: null,
         outlineColor: paleStrokeColor,
@@ -318,12 +329,14 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
         strokeFadeDuration: 0,
         drawingFadeDuration: 0,
       });
-      void writer.quiz({
-        quizStartStrokeNum: cell.traceStep,
-        showHintAfterMisses: false,
-        highlightOnComplete: false,
-        markStrokeCorrectAfterMisses: false,
-      });
+      if (!cell.isFinalTrace) {
+        void writer.quiz({
+          quizStartStrokeNum: cell.traceStep,
+          showHintAfterMisses: false,
+          highlightOnComplete: false,
+          markStrokeCorrectAfterMisses: false,
+        });
+      }
     };
 
     const frameId = window.requestAnimationFrame(mountWriter);
@@ -334,7 +347,7 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
       writer?.cancelQuiz();
       target.innerHTML = '';
     };
-  }, [cell.character.char, cell.role, cell.traceStep, config.showStrokeGuide]);
+  }, [cell.character.char, cell.isFinalTrace, cell.role, cell.traceStep, config.showStrokeGuide]);
 
   if (!config.showStrokeGuide || cell.role !== 'TRACE') {
     return null;
@@ -344,7 +357,7 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
     <div
       ref={targetRef}
       className="hanzi-writer-target aspect-square w-[88%] pointer-events-none mx-auto"
-      aria-label={`${cell.character.char} 前 ${cell.traceStep} 笔描红`}
+      aria-label={cell.isFinalTrace ? `${cell.character.char} 完整笔顺描红` : `${cell.character.char} 前 ${cell.traceStep} 笔描红`}
     />
   );
 };

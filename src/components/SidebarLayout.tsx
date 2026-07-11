@@ -439,15 +439,15 @@ const VisualConfigPanel = () => {
         <NumericConfigControl
           label="渐进描红格"
           min={0}
-          max={20}
+          max={10}
           value={config.traceCellsCount}
           onChange={(value) => updateNumberConfig('traceCellsCount', value)}
         />
 
         <NumericConfigControl
           label="空白练习格"
-          min={0}
-          max={20}
+          min={1}
+          max={11}
           value={config.emptyCellsCount}
           onChange={(value) => updateNumberConfig('emptyCellsCount', value)}
         />
@@ -520,7 +520,7 @@ export const SidebarLayout = () => {
         showStrokeGuide: true,
         traceColor: '#dc2626',
         traceCellsCount: 8,
-        emptyCellsCount: 0,
+        emptyCellsCount: 3,
       });
       return;
     }

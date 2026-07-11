@@ -1,4 +1,9 @@
 # 动态上下文 (activeContext.md)
+## 当前所处阶段（2026-07-11 笔顺完整性与空白练习格修复完成）
+已修复字帖中高笔画汉字仅显示前 8 画、每字空白练习田字格配置失效的问题。`src/components/PreviewContainer.tsx` 已移除固定 8 格渲染常量，12 格行预算现在真实读取 `traceCellsCount` / `emptyCellsCount`，按“1 个母字格 + 可配置描红格 + 至少 1 个空白练习格”进行强约束分配；最后一个描红格不再停留在固定笔画数，而是由 Hanzi Writer 直接展示完整汉字，辅助技术标签同步标记为“完整笔顺描红”。
+
+`src/store/useAppStore.ts` 与 `src/components/SidebarLayout.tsx` 的幼小衔接默认值已统一为 8 个描红格、3 个空白练习格；高级设置限制同步收敛为描红格最多 10、空白格 1 至 11，避免突破 12 格物理预算。黑名单审计与 `git diff --check` 通过；`npm run build` 一次通过，Vite 处理 21 个模块，生成 CSS 23.86 kB（gzip 5.26 kB）与 JS 253.33 kB（gzip 77.64 kB），类型完全契合，等待人类刷新线上验收。
+
 ## 当前所处阶段（2026-07-11 字库静态解耦改造完成）
 已完成字库静态解耦改造，补充人教版二年级上册第一、二单元高频字库数据资产。新增 `src/types/textbook.ts` 的 `TextbookCharacter` 强类型契约与 `src/data/textbooks/pep-y2-s1.ts` 独立教材资产，按单元和课名录入“两、哪、宽、顶、眼、睛、肚、皮、孩、跳、变、极、片、傍、园、孔、桥、群、队、旗、杨、壮、枫、松、柏、棉”共 26 个核心生字。
 
