@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import type { AppState, CharacterMeta, GradeLevel, OutputMode, SemesterType, WorkbookConfig } from '../types/index.js';
 
@@ -140,6 +141,10 @@ const CharacterPicker = () => {
     }));
   const visibleCharacters = getFilteredCharacters(characterPool, filter);
   const visibleCharacterIds = visibleCharacters.map((character) => character.id);
+  const selectedCount = selectedCharIds.size;
+  const rowsPerPage = 12;
+  const estimatedPages = Math.max(1, Math.ceil(selectedCount / rowsPerPage));
+  const blankRowsOnLastPage = estimatedPages * rowsPerPage - selectedCount;
 
   const handleSelectAll = (): void => {
     selectAllCharacters(visibleCharacterIds);
@@ -159,6 +164,15 @@ const CharacterPicker = () => {
         <button className={actionButtonClassName} type="button" onClick={clearAllCharacters}>
           清空
         </button>
+      </div>
+
+      <div
+        className="rounded-lg border border-blue-100 bg-blue-50 p-2.5 text-xs leading-5 text-blue-800"
+        role="status"
+        aria-live="polite"
+      >
+        已选 {selectedCount} 个生字。预计占用 {estimatedPages} 页 A4 纸（第 1 页满载 12 行，尾页自动补齐{' '}
+        {blankRowsOnLastPage} 行纯空白练习行）。
       </div>
 
       <div className="grid grid-cols-4 gap-2">
@@ -442,14 +456,109 @@ const VisualConfigPanel = () => {
   );
 };
 
-export const SidebarLayout = () => (
-  <aside className="sticky top-0 flex h-screen w-96 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white px-5 py-6">
-    <div className="mb-5">
-      <h1 className="text-lg font-semibold tracking-tight text-slate-950">模板配置</h1>
-      <p className="mt-1 text-xs text-slate-500">定制可直接打印的 A4 生字练习模板</p>
+type PresetId = 'FOUNDATION' | 'INDEPENDENT' | 'BLANK';
+
+const presetOptions: Array<{ description: string; icon: string; id: PresetId; label: string }> = [
+  { id: 'FOUNDATION', icon: '👶', label: '幼小衔接', description: '基础描红' },
+  { id: 'INDEPENDENT', icon: '👦', label: '低年级', description: '自主练字' },
+  { id: 'BLANK', icon: '📄', label: '纯空白格', description: '备用纸' },
+];
+
+const PresetSelector = ({ activePreset, onSelect }: { activePreset: PresetId; onSelect: (preset: PresetId) => void }) => (
+  <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-100/80 p-4">
+    <div>
+      <h2 className="text-sm font-semibold text-slate-950">场景化一键预设</h2>
+      <p className="mt-1 text-xs text-slate-500">选择使用场景，自动完成整套排版配置</p>
     </div>
 
-    <div className="space-y-4">
+    <div className="grid grid-cols-3 gap-2">
+      {presetOptions.map((preset) => {
+        const isActive = activePreset === preset.id;
+
+        return (
+          <button
+            key={preset.id}
+            className={[
+              'min-h-24 rounded-xl border px-2 py-3 text-center transition focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
+              isActive
+                ? 'border-slate-950 bg-slate-950 text-white shadow-md'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50',
+            ].join(' ')}
+            type="button"
+            aria-pressed={isActive}
+            onClick={() => onSelect(preset.id)}
+          >
+            <span className="block text-xl" aria-hidden="true">{preset.icon}</span>
+            <span className="mt-1 block text-xs font-semibold">{preset.label}</span>
+            <span className={['mt-0.5 block text-[11px]', isActive ? 'text-slate-300' : 'text-slate-500'].join(' ')}>
+              {preset.description}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </section>
+);
+
+export const SidebarLayout = () => {
+  const { clearAllCharacters, updateConfig } = useAppStore((state) => ({
+    clearAllCharacters: state.clearAllCharacters,
+    updateConfig: state.updateConfig,
+  }));
+  const [activePreset, setActivePreset] = useState<PresetId>('FOUNDATION');
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
+  const applyPreset = (preset: PresetId): void => {
+    setActivePreset(preset);
+
+    if (preset === 'FOUNDATION') {
+      updateConfig({
+        showPinyin: true,
+        showGrid: true,
+        gridType: 'MI',
+        gridLineColor: '#fca5a5',
+        showStrokeGuide: true,
+        traceColor: '#dc2626',
+        traceCellsCount: 8,
+        emptyCellsCount: 0,
+      });
+      return;
+    }
+
+    if (preset === 'INDEPENDENT') {
+      updateConfig({
+        showPinyin: false,
+        showGrid: true,
+        gridLineColor: '#cbd5e1',
+        showStrokeGuide: false,
+        traceColor: '#4b5563',
+        traceCellsCount: 0,
+        emptyCellsCount: 11,
+      });
+      return;
+    }
+
+    clearAllCharacters();
+    updateConfig({
+      showPinyin: false,
+      showGrid: true,
+      gridLineColor: '#cbd5e1',
+      showStrokeGuide: false,
+      traceCellsCount: 0,
+      emptyCellsCount: 11,
+    });
+  };
+
+  return (
+    <aside className="sticky top-0 flex h-screen w-96 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white px-5 py-6">
+      <div className="mb-5">
+        <h1 className="text-lg font-semibold tracking-tight text-slate-950">模板配置</h1>
+        <p className="mt-1 text-xs text-slate-500">定制可直接打印的 A4 生字练习模板</p>
+      </div>
+
+      <div className="space-y-4">
+        <PresetSelector activePreset={activePreset} onSelect={applyPreset} />
+
       <section className="rounded-xl border border-slate-200 bg-slate-100/80 p-4">
         <ModeSwitcher />
       </section>
@@ -461,12 +570,38 @@ export const SidebarLayout = () => (
         </div>
         <TextbookSelector />
         <CharacterPicker />
-        <PinyinConfigControl />
       </section>
 
-      <VisualConfigPanel />
-    </div>
-  </aside>
-);
+        <button
+          className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+          type="button"
+          aria-expanded={isAdvancedOpen}
+          aria-controls="advanced-config-panel"
+          onClick={() => setIsAdvancedOpen((isOpen) => !isOpen)}
+        >
+          <span>高级自定义微调 ⚙️</span>
+          <span className={['text-slate-400 transition-transform duration-300', isAdvancedOpen ? 'rotate-180' : ''].join(' ')} aria-hidden="true">
+            ▾
+          </span>
+        </button>
+
+        <div
+          id="advanced-config-panel"
+          className={[
+            'grid transition-[grid-template-rows,opacity] duration-300 ease-out',
+            isAdvancedOpen ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
+          ].join(' ')}
+        >
+          <div className="overflow-hidden">
+            <div className="space-y-4 pb-1">
+              <PinyinConfigControl />
+              <VisualConfigPanel />
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+};
 
 export { CharacterPicker, ModeSwitcher, TextbookSelector, VisualConfigPanel };

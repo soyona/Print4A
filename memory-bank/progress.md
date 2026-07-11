@@ -1,5 +1,7 @@
 # 任务进度看板 (progress.md)
 ## 🚀 开发进度清单
+[x] 产品经理交互动线升级完成：三组场景化 Presets、一键配置联动与纯空白纸清选字、12 行/页纸张预算实时反馈、高级自定义默认折叠及平滑展开全部落地
+
 [x] 视觉与空间布局优化完成：384px 配置侧栏、沉浸式灰色工作台、A4 双层纸张阴影/浅灰边框/24px 页间距、动态页码边界指示器与打印纯净度清零规则全部落地
 
 [x] Vercel 生产样式链路修复完成：接入 Tailwind Vite 插件与 CSS 入口，构建生成 CSS bundle，并通过生产预览布局、控制台及选字交互验证
@@ -55,6 +57,7 @@
 [x] Vercel 404 部署配置修复完成：补齐 Vite 生产构建入口、根级 `index.html`、`dist` 输出目录与 SPA fallback，本地生产构建及 HTTP 200 产物验证通过
 
 ## 最近完成
+- 2026-07-11: 已完成产品经理交互动线升级：模板配置顶部新增“幼小衔接·基础描红”“低年级·自主练字”“纯空白格·备用纸”三组高对比 Presets，分别联动拼音、米字格、笔顺引导、描红/留白数量与浅红/淡灰线色，纯空白场景同步清空选字并触发现有整页空状态算法。生字选择区新增按每页 12 行计算的实时纸张预算面板，动态显示已选字数、预计 A4 页数和尾页补齐行数；拼音、格子样式与笔顺描红微调默认折叠，由“高级自定义微调 ⚙️”平滑展开。黑名单审计、`git diff --check` 与 `npm run build` 一次通过，等待 Git 推送触发 Vercel 自动部署。
 - 2026-07-11: 已完成产品经理视觉与空间布局优化：`SidebarLayout` 从 `w-80` 拓宽为 `w-96`，右侧 `main` 保持 `flex-1` 并使用 `bg-slate-200/80` 工作台背景；网页端 `.a4-page` 增加 24px 页间距、半透明浅灰边框及双层厚重阴影，相邻页面之间动态显示“- 第 X 页 / 共 Y 页 -”指示器。打印媒体隐藏指示器，并以 `!important` 清零页面 margin、shadow 与 border。`npm run build` 一次通过，黑名单审计及 `git diff --check` 通过，等待 Git 推送触发 Vercel 自动部署。
 - 2026-07-11: 已修复 Vercel Deployment Details 404 的缺失构建入口：新增根级 `index.html`，在 `package.json` 增加 Vite `dev` / `build` / `preview` 脚本及锁定依赖，并在 `vercel.json` 显式配置 `npm run build`、`dist`、Vite 框架和 SPA fallback。`npm run build` 成功生成 `dist/index.html` 与哈希化 JS；本地生产预览根路径和 JS 资源均返回 HTTP 200，配置断言及 `git diff --check` 通过，可重新触发生产部署。
 - 2026-07-11: 已一次性同步修正 `test-print.html` 与 `PreviewContainer.tsx`：删除静态 SVG 的 2px 黑色 `<rect>`，两侧字格统一为 `1px #64748b` 独立外框，内部辅助线统一为 `#cbd5e1`、0.8、`6 6`；四线三格统一为 7mm 且四条线位于顶部/1/3/2/3/底部，消除田字格上方空隙。拼音及字格 Grid 统一加入 1.2mm 横向间距，行距统一为 0.25mm；静态格宽/分页公式同步计入列间距，并为少字尾页补齐空白行。`npx tsc --noEmit` 0 报错，内嵌脚本 `embedded-js-ok 1`，目标差异空白检查通过；等待人类刷新静态模板视觉验收。
