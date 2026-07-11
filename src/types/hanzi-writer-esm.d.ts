@@ -1,4 +1,8 @@
 declare module 'hanzi-writer/dist/index.esm.js' {
+  export type CharacterData = {
+    strokes: string[];
+  };
+
   type HanziWriterOptions = {
     width?: number;
     height?: number;
@@ -29,6 +33,7 @@ declare module 'hanzi-writer/dist/index.esm.js' {
 
   const HanziWriter: {
     create: (element: string | HTMLElement, character: string, options?: HanziWriterOptions) => HanziWriterInstance;
+    loadCharacterData: (character: string) => Promise<CharacterData | void>;
   };
 
   export default HanziWriter;

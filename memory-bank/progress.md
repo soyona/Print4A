@@ -1,5 +1,7 @@
 # 任务进度看板 (progress.md)
 ## 🚀 开发进度清单
+[x] 完整逐笔行与独立练习行重构完成：真实笔画数驱动第 1 画至末画完整序列、动态正方形缩放、每字独立 12 格空白田字练习行全部落地
+
 [x] 笔顺完整性与空白练习格修复完成：移除固定前 8 画限制、末描红格完整字闭合、配置驱动 12 格预算及每字至少 1 个空白田字格全部落地
 
 [x] 字库静态解耦改造完成：独立 `TextbookCharacter` 契约、二年级上册第一/二单元 26 字教材资产、Store Mock 移除与筛选适配全部落地
@@ -63,6 +65,7 @@
 [x] Vercel 404 部署配置修复完成：补齐 Vite 生产构建入口、根级 `index.html`、`dist` 输出目录与 SPA fallback，本地生产构建及 HTTP 200 产物验证通过
 
 ## 最近完成
+- 2026-07-11: 已完成完整逐笔行与独立练习行重构：React 预览通过 Hanzi Writer `loadCharacterData` 的真实 `strokes.length` 动态生成每字从第 1 画至最后一画的全部渐进格，“哪”完整覆盖 9 画、“睛”完整覆盖 13 画；笔顺格按数量在 A4 宽度内保持正方形缩放。每字笔顺行下方固定追加一整行 12 个空白田字格，分页同步为双行字块高度；侧栏移除失效数量控件并明确自动规则，类型声明补齐字符数据契约。黑名单审计、`git diff --check` 与 `npm run build` 一次通过；生产包 CSS 23.94 kB（gzip 5.28 kB）、JS 253.22 kB（gzip 77.72 kB），等待人类刷新线上验收。
 - 2026-07-11: 已修复字帖笔顺不完整与空白练习格配置失效：`PreviewContainer` 删除固定 8 格常量，改为在 12 格物理预算内读取 `traceCellsCount` / `emptyCellsCount`，至少保留 1 个空白田字格，并强制最后一个描红格通过 Hanzi Writer 展示完整汉字；幼小衔接与 Store 默认值统一为 8 个描红格、3 个空白格，高级控制范围同步收敛。黑名单审计、`git diff --check` 与 `npm run build` 一次通过；生产包 CSS 23.86 kB（gzip 5.26 kB）、JS 253.33 kB（gzip 77.64 kB），等待人类刷新线上验收。
 - 2026-07-11: 已完成字库静态解耦改造：新增 `src/types/textbook.ts` 的 `TextbookCharacter` 强类型契约及 `src/data/textbooks/pep-y2-s1.ts` 独立字库资产，按课名录入人教版二年级上册第一、二单元 26 个核心生字；`useAppStore` 已移除“明、赢、林”Mock，通过强类型适配将独立资产作为 `characterPool` 初始数据，并默认启用二年级上册筛选。黑名单审计、`git diff --check` 与 `npm run build` 一次通过；生产包 CSS 23.86 kB（gzip 5.26 kB）、JS 253.07 kB（gzip 77.56 kB），等待人类刷新线上验收。
 - 2026-07-11: 已完成产品经理出版级视觉打磨：`PreviewContainer` 拼音轨升级为 12px 半粗体与淡灰实线四线三格，拼音字形加入白色保护底以避免声调被线条横切；Hanzi Writer 已写笔画统一为经典墨蓝 `#1e3a8a`，未写骨架淡化为 `#f1f5f9`；米字格 SVG 虚线节奏统一为 `6 8`，PRACTICE 行距核验并保持 `0.25mm`。`git diff --check` 与 `npm run build` 一次通过，CSS/JS 生产产物完整生成。

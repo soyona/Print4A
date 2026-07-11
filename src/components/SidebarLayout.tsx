@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
-import type { AppState, CharacterMeta, GradeLevel, OutputMode, SemesterType, WorkbookConfig } from '../types/index.js';
+import type { AppState, CharacterMeta, GradeLevel, OutputMode, SemesterType } from '../types/index.js';
 
 const gradeOptions: GradeLevel[] = ['1', '2', '3', '4', '5', '6'];
 const semesterOptions: Array<{ label: string; value: SemesterType }> = [
@@ -15,9 +15,6 @@ const actionButtonClassName =
   'h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50';
 
 const modeButtonBaseClassName = 'h-10 rounded-md text-sm font-semibold transition';
-
-const numberInputClassName =
-  'h-9 w-16 rounded-md border border-slate-200 bg-white px-2 text-center text-sm font-semibold text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200';
 
 const rangeInputClassName = 'w-full accent-slate-950';
 
@@ -246,48 +243,6 @@ const ModeSwitcher = () => {
   );
 };
 
-type ConfigNumberKey = 'traceCellsCount' | 'emptyCellsCount';
-
-type NumericConfigControlProps = {
-  label: string;
-  max: number;
-  min: number;
-  value: number;
-  onChange: (value: number) => void;
-};
-
-const clampNumber = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
-
-const NumericConfigControl = ({ label, max, min, onChange, value }: NumericConfigControlProps) => {
-  const handleChange = (event: SelectChangeEvent): void => {
-    onChange(clampNumber(Number(event.target.value), min, max));
-  };
-
-  return (
-    <label className="block space-y-2">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-slate-700">{label}</span>
-        <input
-          className={numberInputClassName}
-          type="number"
-          min={min}
-          max={max}
-          value={value}
-          onChange={handleChange}
-        />
-      </div>
-      <input
-        className={rangeInputClassName}
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={handleChange}
-      />
-    </label>
-  );
-};
-
 const ToggleControl = ({
   checked,
   label,
@@ -356,11 +311,6 @@ const VisualConfigPanel = () => {
     config: state.config,
     updateConfig: state.updateConfig,
   }));
-
-  const updateNumberConfig = (key: ConfigNumberKey, value: number): void => {
-    const nextConfig: Partial<WorkbookConfig> = { [key]: value };
-    updateConfig(nextConfig);
-  };
 
   return (
     <div className="space-y-4">
@@ -436,21 +386,9 @@ const VisualConfigPanel = () => {
           onChange={(colorMode) => updateConfig({ traceColor: colorMode === 'RED' ? '#dc2626' : '#4b5563' })}
         />
 
-        <NumericConfigControl
-          label="渐进描红格"
-          min={0}
-          max={10}
-          value={config.traceCellsCount}
-          onChange={(value) => updateNumberConfig('traceCellsCount', value)}
-        />
-
-        <NumericConfigControl
-          label="空白练习格"
-          min={1}
-          max={11}
-          value={config.emptyCellsCount}
-          onChange={(value) => updateNumberConfig('emptyCellsCount', value)}
-        />
+        <p className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-800">
+          系统会按真实总笔画自动列出完整笔顺，并为每个字追加一整行 12 格空白练习区。
+        </p>
       </section>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import HanziWriter from 'hanzi-writer/dist/index.esm.js';
 import { useAppStore } from '../store/useAppStore.js';
 import type { CharacterMeta, OutputMode, WorkbookConfig } from '../types/index.js';
@@ -16,7 +16,7 @@ const practiceCellSizeMm =
     a4PageHorizontalPaddingMm -
     practiceCellGapMm * (practiceCellsPerRow - 1)) /
   practiceCellsPerRow;
-const practiceRowHeightMm = practicePinyinTrackHeightMm + practiceCellSizeMm;
+const practiceRowHeightMm = practicePinyinTrackHeightMm + practiceCellSizeMm * 2 + practiceRowGapMm;
 const practiceRowsPerPage = Math.floor(
   (a4PageHeightMm - a4PageVerticalPaddingMm + practiceRowGapMm) /
     (practiceRowHeightMm + practiceRowGapMm),
@@ -190,21 +190,11 @@ const getPuzzlePieces = (characters: CharacterMeta[]): CharacterPiece[] =>
     })),
   );
 
-const getPracticeCells = (character: CharacterMeta, config: WorkbookConfig): PracticeCell[] => {
-  const availablePracticeSlots = practiceCellsPerRow - 1;
-  const emptySlots = Math.min(
-    availablePracticeSlots,
-    Math.max(1, Math.round(config.emptyCellsCount)),
-  );
-  const traceSlots = config.showStrokeGuide
-    ? Math.min(
-        Math.max(0, Math.round(config.traceCellsCount)),
-        availablePracticeSlots - emptySlots,
-      )
-    : 0;
+const getPracticeCells = (character: CharacterMeta, strokeCount: number, showStrokeGuide: boolean): PracticeCell[] => {
+  const traceSlots = showStrokeGuide ? strokeCount : 0;
 
-  return Array.from({ length: practiceCellsPerRow }, (_, cellIndex) => {
-    const role: PracticeCellRole = cellIndex === 0 ? 'MASTER' : cellIndex <= traceSlots ? 'TRACE' : 'EMPTY';
+  return Array.from({ length: traceSlots + 1 }, (_, cellIndex) => {
+    const role: PracticeCellRole = cellIndex === 0 ? 'MASTER' : 'TRACE';
 
     return {
       id: `${character.id}-practice-cell-${cellIndex}`,
@@ -253,11 +243,13 @@ const PrintActionBar = () => {
 
 const PinyinTrack = ({
   cellCount,
+  cellWidthMm,
   character,
   config,
   rowId,
 }: {
   cellCount: number;
+  cellWidthMm?: number;
   character?: CharacterMeta;
   config: WorkbookConfig;
   rowId: string;
@@ -270,8 +262,8 @@ const PinyinTrack = ({
         <div className="absolute inset-x-0 top-2/3 border-t border-solid border-[#e2e8f0]" />
         <div className="absolute inset-x-0 bottom-0 border-t border-solid border-[#e2e8f0]" />
         <div
-          className="relative grid h-full gap-x-[1.2mm]"
-          style={{ gridTemplateColumns: `repeat(${cellCount}, minmax(0, 1fr))` }}
+          className="relative grid h-full justify-center gap-x-[1.2mm]"
+          style={{ gridTemplateColumns: `repeat(${cellCount}, ${cellWidthMm ? `${cellWidthMm}mm` : 'minmax(0, 1fr)'})` }}
         >
           {Array.from({ length: cellCount }, (_, cellIndex) => (
             <div
@@ -403,34 +395,74 @@ const BlankPracticeRow = ({ config, rowIndex }: { config: WorkbookConfig; rowInd
   );
 };
 
+const CharacterPracticeBlock = ({ character, config }: { character: CharacterMeta; config: WorkbookConfig }) => {
+  const [strokeCount, setStrokeCount] = useState(0);
+
+  useEffect(() => {
+    let isDisposed = false;
+
+    void HanziWriter.loadCharacterData(character.char).then((data) => {
+      if (!isDisposed && data) {
+        setStrokeCount(data.strokes.length);
+      }
+    });
+
+    return () => {
+      isDisposed = true;
+    };
+  }, [character.char]);
+
+  const practiceCells = getPracticeCells(character, strokeCount, config.showStrokeGuide);
+  const sequenceCellSizeMm = Math.min(
+    practiceCellSizeMm,
+    (a4PageWidthMm - a4PageHorizontalPaddingMm - practiceCellGapMm * (practiceCells.length - 1)) /
+      practiceCells.length,
+  );
+
+  return (
+    <div className="practice-row w-full">
+      <PinyinTrack
+        cellCount={practiceCells.length}
+        cellWidthMm={sequenceCellSizeMm}
+        character={character}
+        config={config}
+        rowId={character.id}
+      />
+      <div
+        className="grid w-full justify-center gap-x-[1.2mm]"
+        style={{ gridTemplateColumns: `repeat(${practiceCells.length}, ${sequenceCellSizeMm}mm)` }}
+      >
+        {practiceCells.map((cell) => (
+          <PracticeCellView key={cell.id} cell={cell} config={config} />
+        ))}
+      </div>
+      <div
+        className="mt-[0.25mm] grid w-full gap-x-[1.2mm]"
+        style={{ gridTemplateColumns: `repeat(${practiceCellsPerRow}, minmax(0, 1fr))` }}
+      >
+        {Array.from({ length: practiceCellsPerRow }, (_, cellIndex) => (
+          <div
+            key={`${character.id}-empty-practice-${cellIndex}`}
+            className={[
+              'hanzi-cell relative aspect-square min-w-0 overflow-hidden bg-white',
+              config.showGrid ? 'mi-grid-bg' : '',
+            ].join(' ')}
+            style={getGridBackgroundStyle(config)}
+            aria-label={`${character.char} 空白练习格 ${cellIndex + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const PracticeCanvas = ({ config, data }: PracticeCanvasProps) => (
   <div className="flex h-full flex-col gap-[0.25mm]">
-    {data.map((character) => {
-      const practiceCells = getPracticeCells(character, config);
-
-      return (
-      <div key={character.id} className="practice-row w-full">
-        <PinyinTrack
-          cellCount={practiceCells.length}
-          character={character}
-          config={config}
-          rowId={character.id}
-        />
-        <div className="grid w-full gap-x-[1.2mm]" style={{ gridTemplateColumns: `repeat(${practiceCells.length}, minmax(0, 1fr))` }}>
-          {practiceCells.map((cell) => (
-            <PracticeCellView key={cell.id} cell={cell} config={config} />
-          ))}
-        </div>
-      </div>
-    );
-    })}
-    {Array.from({ length: Math.max(0, practiceRowsPerPage - data.length) }, (_, rowIndex) => (
-      <BlankPracticeRow
-        key={`page-blank-practice-row-${data.length}-${rowIndex}`}
-        config={config}
-        rowIndex={data.length + rowIndex}
-      />
-    ))}
+    {data.length > 0
+      ? data.map((character) => <CharacterPracticeBlock key={character.id} character={character} config={config} />)
+      : Array.from({ length: practiceRowsPerPage }, (_, rowIndex) => (
+          <BlankPracticeRow key={`page-blank-practice-row-${rowIndex}`} config={config} rowIndex={rowIndex} />
+        ))}
   </div>
 );
 

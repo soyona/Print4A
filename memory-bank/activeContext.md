@@ -4,6 +4,11 @@
 
 `src/store/useAppStore.ts` 与 `src/components/SidebarLayout.tsx` 的幼小衔接默认值已统一为 8 个描红格、3 个空白练习格；高级设置限制同步收敛为描红格最多 10、空白格 1 至 11，避免突破 12 格物理预算。黑名单审计与 `git diff --check` 通过；`npm run build` 一次通过，Vite 处理 21 个模块，生成 CSS 23.86 kB（gzip 5.26 kB）与 JS 253.33 kB（gzip 77.64 kB），类型完全契合，等待人类刷新线上验收。
 
+## 当前所处阶段（2026-07-11 完整逐笔行与独立练习行重构完成）
+已按人类验收反馈完成真正的完整笔顺重构。`src/components/PreviewContainer.tsx` 通过 Hanzi Writer `loadCharacterData(character.char)` 获取真实 `strokes.length`，为每个汉字动态生成“母字格 + 第 1 画至最后一画”的完整渐进笔顺行；不再受固定 8 格或 12 格描红预算截断，因此“哪”生成 9 个逐笔格，“睛”生成 13 个逐笔格，末格展示完整字形。笔顺格会按真实数量在 A4 可用宽度内等比收缩并保持正方形。
+
+每个汉字的完整笔顺行下方现固定追加一整行 12 个独立空白田字格练习区；分页物理高度同步按“双行字块”重新计算。`src/components/SidebarLayout.tsx` 已移除失效的固定描红格/空白格数量控件，改为说明自动完整笔顺与独立练习行规则；`src/types/hanzi-writer-esm.d.ts` 补齐字符数据加载强类型。黑名单审计与 `git diff --check` 通过；`npm run build` 一次通过，Vite 处理 21 个模块，生成 CSS 23.94 kB（gzip 5.28 kB）与 JS 253.22 kB（gzip 77.72 kB），等待人类刷新线上验收。
+
 ## 当前所处阶段（2026-07-11 字库静态解耦改造完成）
 已完成字库静态解耦改造，补充人教版二年级上册第一、二单元高频字库数据资产。新增 `src/types/textbook.ts` 的 `TextbookCharacter` 强类型契约与 `src/data/textbooks/pep-y2-s1.ts` 独立教材资产，按单元和课名录入“两、哪、宽、顶、眼、睛、肚、皮、孩、跳、变、极、片、傍、园、孔、桥、群、队、旗、杨、壮、枫、松、柏、棉”共 26 个核心生字。
 
