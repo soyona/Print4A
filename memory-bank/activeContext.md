@@ -1,4 +1,9 @@
 # 动态上下文 (activeContext.md)
+## 当前所处阶段（2026-07-11 固定两行完整笔顺与补空格重构完成）
+已将每个汉字的练字区域重构为固定 12 列、合计至少 24 格的完整行：先顺序放置 1 个母字格与全部真实笔顺格，再用空白练习格补齐两整行；公式锁定为 `max(24, ceil((1 + 总笔画数) / 12) × 12)`，超过 23 画时自动扩展到下一个完整 12 格行，严禁截断。当前字库中“两”为 8 个已用格 + 16 个空白格，“哪”为 10 + 14，“宽”为 11 + 13，“睛”为 14 + 10。
+
+`src/components/PreviewContainer.tsx` 已删除按笔画数缩小和居中策略，拼音、母字、笔顺与补空格统一使用固定尺寸、12 列左对齐网格；笔顺数据改为选字后统一预载，加载完成前禁用打印，失败时显示具体汉字，描红颜色真实读取 `config.traceColor`。纯空白纸模式同步按每组 24 格铺排。`src/components/SidebarLayout.tsx`、`src/types/index.ts`、`src/store/useAppStore.ts` 与 `memory-bank/dataModels.md` 已移除作废的 `traceCellsCount` / `emptyCellsCount` 字段并更新自动补齐说明。黑名单审计、公式断言、`git diff --check` 与 `npm run build` 通过；Vite 处理 21 个模块，生成 CSS 24.07 kB（gzip 5.31 kB）与 JS 253.56 kB（gzip 77.97 kB），等待人类刷新本地或线上页面验收。
+
 ## 当前所处阶段（2026-07-11 笔顺完整性与空白练习格修复完成）
 已修复字帖中高笔画汉字仅显示前 8 画、每字空白练习田字格配置失效的问题。`src/components/PreviewContainer.tsx` 已移除固定 8 格渲染常量，12 格行预算现在真实读取 `traceCellsCount` / `emptyCellsCount`，按“1 个母字格 + 可配置描红格 + 至少 1 个空白练习格”进行强约束分配；最后一个描红格不再停留在固定笔画数，而是由 Hanzi Writer 直接展示完整汉字，辅助技术标签同步标记为“完整笔顺描红”。
 

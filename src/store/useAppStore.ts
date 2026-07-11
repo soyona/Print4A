@@ -51,8 +51,6 @@ const createInitialState = (): AppState => ({
     showStrokeGuide: true,
     textColor: '#111827',
     traceColor: '#dc2626',
-    traceCellsCount: 8,
-    emptyCellsCount: 3,
   },
   setFilter: (updater: Partial<AppState['filter']>) => {
     setState((current) => {

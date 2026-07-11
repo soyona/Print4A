@@ -36,8 +36,6 @@ export interface WorkbookConfig {
   showStrokeGuide: boolean;  // 是否开启笔顺分解图引导
   textColor: string;         // 汉字文本颜色 HEX 值
   traceColor: string;        // 描红文本颜色 HEX 值
-  traceCellsCount: number;   // 渐进描红格子数
-  emptyCellsCount: number;   // 纯空练习格子数
 }
 
 /**

@@ -387,7 +387,7 @@ const VisualConfigPanel = () => {
         />
 
         <p className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-800">
-          系统会按真实总笔画自动列出完整笔顺，并为每个字追加一整行 12 格空白练习区。
+          系统会按真实总笔画依次排布母字与全部笔顺，再用空白练习格补齐固定两行、共 24 格。
         </p>
       </section>
     </div>
@@ -457,8 +457,6 @@ export const SidebarLayout = () => {
         gridLineColor: '#fca5a5',
         showStrokeGuide: true,
         traceColor: '#dc2626',
-        traceCellsCount: 8,
-        emptyCellsCount: 3,
       });
       return;
     }
@@ -470,8 +468,6 @@ export const SidebarLayout = () => {
         gridLineColor: '#cbd5e1',
         showStrokeGuide: false,
         traceColor: '#4b5563',
-        traceCellsCount: 0,
-        emptyCellsCount: 11,
       });
       return;
     }
@@ -482,8 +478,6 @@ export const SidebarLayout = () => {
       showGrid: true,
       gridLineColor: '#cbd5e1',
       showStrokeGuide: false,
-      traceCellsCount: 0,
-      emptyCellsCount: 11,
     });
   };
 
