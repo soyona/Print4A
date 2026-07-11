@@ -23,7 +23,8 @@ const practiceRowsPerPage = Math.floor(
 );
 const traceCellsPerRow = 8;
 const puzzlePiecesPerPage = 36;
-const paleStrokeColor = '#e2e8f0';
+const traceInkColor = '#1e3a8a';
+const paleStrokeColor = '#f1f5f9';
 
 const previewPrintStyles = `
   @page {
@@ -61,7 +62,7 @@ const previewPrintStyles = `
 
   .mi-grid-bg {
     /* 彻底移除原 SVG 中的外层实线矩形，仅保留内部极细的十字与对角斜线 */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100 M0 0L100 100 M100 0L0 100' stroke='%23cbd5e1' stroke-width='0.8' stroke-dasharray='6 6' fill='none'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100 M0 0L100 100 M100 0L0 100' stroke='%23cbd5e1' stroke-width='0.8' stroke-dasharray='6 8' fill='none'/%3E%3C/svg%3E");
     background-position: center;
     background-repeat: no-repeat;
     background-size: 100% 100%;
@@ -211,7 +212,7 @@ const getGridBackgroundStyle = (config: WorkbookConfig): { backgroundImage?: str
 
   const color = encodeURIComponent(config.gridLineColor || '#cbd5e1');
   const diagonals = config.gridType === 'MI' ? ' M0 0L100 100 M100 0L0 100' : '';
-  const svg = `%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100${diagonals}' stroke='${color}' stroke-width='${config.gridLineWidth}' stroke-dasharray='6 6' fill='none'/%3E%3C/svg%3E`;
+  const svg = `%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100${diagonals}' stroke='${color}' stroke-width='${config.gridLineWidth}' stroke-dasharray='6 8' fill='none'/%3E%3C/svg%3E`;
 
   return { backgroundImage: `url("data:image/svg+xml,${svg}")` };
 };
@@ -253,10 +254,10 @@ const PinyinTrack = ({
   <div className="relative h-[7mm]">
     {config.showPinyin ? (
       <>
-        <div className="absolute inset-x-0 top-0 border-t border-dashed border-[#cbd5e1]" />
-        <div className="absolute inset-x-0 top-1/3 border-t border-dashed border-[#cbd5e1]" />
-        <div className="absolute inset-x-0 top-2/3 border-t border-dashed border-[#cbd5e1]" />
-        <div className="absolute inset-x-0 bottom-0 border-t border-dashed border-[#cbd5e1]" />
+        <div className="absolute inset-x-0 top-0 border-t border-solid border-[#e2e8f0]" />
+        <div className="absolute inset-x-0 top-1/3 border-t border-solid border-[#e2e8f0]" />
+        <div className="absolute inset-x-0 top-2/3 border-t border-solid border-[#e2e8f0]" />
+        <div className="absolute inset-x-0 bottom-0 border-t border-solid border-[#e2e8f0]" />
         <div
           className="relative grid h-full gap-x-[1.2mm]"
           style={{ gridTemplateColumns: `repeat(${cellCount}, minmax(0, 1fr))` }}
@@ -265,11 +266,15 @@ const PinyinTrack = ({
             <div
               key={`${rowId}-pinyin-${cellIndex}`}
               className={[
-                'flex h-full items-center justify-center pb-[0.1mm] text-[10px] font-medium leading-none',
+                'flex h-full items-center justify-center text-[12px] font-semibold leading-none',
                 cellIndex === 0 ? 'text-slate-950' : 'text-slate-300',
               ].join(' ')}
             >
-              {character?.pinyin ?? null}
+              {character?.pinyin ? (
+                <span className="relative z-[1] bg-white px-[0.35mm] py-[0.15mm] leading-none">
+                  {character.pinyin}
+                </span>
+              ) : null}
             </div>
           ))}
         </div>
@@ -305,11 +310,11 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
         renderer: 'svg',
         showCharacter: false,
         showOutline: true,
-        strokeColor: config.traceColor || '#4b5563',
+        strokeColor: traceInkColor,
         radicalColor: null,
         outlineColor: paleStrokeColor,
-        highlightColor: config.traceColor || '#4b5563',
-        drawingColor: config.traceColor || '#4b5563',
+        highlightColor: traceInkColor,
+        drawingColor: traceInkColor,
         strokeFadeDuration: 0,
         drawingFadeDuration: 0,
       });
@@ -329,7 +334,7 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
       writer?.cancelQuiz();
       target.innerHTML = '';
     };
-  }, [cell.character.char, cell.role, cell.traceStep, config.showStrokeGuide, config.traceColor]);
+  }, [cell.character.char, cell.role, cell.traceStep, config.showStrokeGuide]);
 
   if (!config.showStrokeGuide || cell.role !== 'TRACE') {
     return null;
