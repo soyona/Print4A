@@ -1,4 +1,9 @@
 # 动态上下文 (activeContext.md)
+## 当前所处阶段（2026-07-11 Vercel 生产样式链路修复完成）
+已完成 Vercel 生产样式错乱修复。根因是 React 源码广泛使用 Tailwind utility class，但 Vite 生产入口未加载 CSS、构建链路也未接入 Tailwind，旧 `dist` 因此仅含 HTML 与 JS。现已新增 `src/styles.css` 并通过根级 `index.html` 加载，新增 `vite.config.ts` 接入官方 `@tailwindcss/vite` 插件，`package.json` / `package-lock.json` 同步加入 `tailwindcss` 与 `@tailwindcss/vite`。
+
+运行 `npm run build` 成功，`dist` 现生成 `index.html`、`assets/index-90AMKwrn.js` 与 `assets/index-ButMuMPc.css`；CSS bundle 已确认包含 `.flex`、`.min-h-screen`、`.w-80`、`.bg-slate-100` 与 `@media print`。本地 Vite production preview 在 1280×720 下验证根布局为 flex、侧栏宽 320px 且 sticky、主区域 flex-grow 为 1、body margin 为 0，控制台 0 error/warn；点击“明”后页面显示 1 个汉字并生成 8 个 Hanzi Writer 目标。当前改动具备通过 Git 推送触发 Vercel 重建的条件。
+
 ## 当前所处阶段（2026-07-11 Vercel 404 部署配置修复）
 已完成 Vercel 404 路由重定向与输出目录规范化修复。根级 `index.html` 正确挂载 `#root` 并加载 `/src/main.ts`；`package.json` 的 `build` 脚本执行 `tsc --noEmit && vite build`，Vite 默认将完整静态产物输出到根级 `dist`。`vercel.json` 已无条件覆写为指定的 `cleanUrls: true`、`trailingSlash: false` 与全路径 SPA fallback。运行 `npm run build` 成功，生成 `dist/index.html` 与 `dist/assets/index-CBKpSJHp.js`；配置 JSON 断言、产物断言与 `git diff --check` 均通过。当前部署文件已具备通过 Git 推送重新触发 Vercel Production Deployment 的条件。
 

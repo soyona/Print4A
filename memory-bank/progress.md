@@ -1,5 +1,7 @@
 # 任务进度看板 (progress.md)
 ## 🚀 开发进度清单
+[x] Vercel 生产样式链路修复完成：接入 Tailwind Vite 插件与 CSS 入口，构建生成 CSS bundle，并通过生产预览布局、控制台及选字交互验证
+
 [x] 已完成 Vercel 404 路由重定向与输出目录规范化修复
 
 [x] 项目 V2.0.0-Matrix 目录架构与特化规则配置初始化成功

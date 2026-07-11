@@ -20,7 +20,7 @@
 - 严禁引入任何外部复杂状态库（如 Redux），仅允许使用 React Context。\n- 严禁破坏单页应用（SPA）的标准轻量路由结构。
 
 ## 🛑 5. 唯一准入核心依赖/技术白名单 (Whitelist)
-- `META_WHITELIST` : [ "hanzi-writer" ]
+- `META_WHITELIST` : [ "hanzi-writer", "tailwindcss", "@tailwindcss/vite" ]
 
 ## ❌ 6. 动态关联动态审计黑名单 (Blacklist)
 - `META_BLACKLIST` : [ "font-face拼凑方案", "CSS绝对定位堆叠方案", "其他第三方笔顺库" ]
