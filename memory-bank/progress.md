@@ -1,5 +1,7 @@
 # 任务进度看板 (progress.md)
 ## 🚀 开发进度清单
+[x] 已完成 Vercel 404 路由重定向与输出目录规范化修复
+
 [x] 项目 V2.0.0-Matrix 目录架构与特化规则配置初始化成功
 
 [x] 云端第一阶段图纸压榨（projectBrief/dataModels/systemPatterns）完成并本地覆盖
@@ -46,7 +48,10 @@
 
 [x] 静态模板与 React 预览视觉一致性修复完成：1px 灰色独立字格、无 SVG 双重外框、7mm 三等分拼音轨底线贴合、1.2mm 格间距、0.25mm 行距与少字尾页补齐全面同步
 
+[x] Vercel 404 部署配置修复完成：补齐 Vite 生产构建入口、根级 `index.html`、`dist` 输出目录与 SPA fallback，本地生产构建及 HTTP 200 产物验证通过
+
 ## 最近完成
+- 2026-07-11: 已修复 Vercel Deployment Details 404 的缺失构建入口：新增根级 `index.html`，在 `package.json` 增加 Vite `dev` / `build` / `preview` 脚本及锁定依赖，并在 `vercel.json` 显式配置 `npm run build`、`dist`、Vite 框架和 SPA fallback。`npm run build` 成功生成 `dist/index.html` 与哈希化 JS；本地生产预览根路径和 JS 资源均返回 HTTP 200，配置断言及 `git diff --check` 通过，可重新触发生产部署。
 - 2026-07-11: 已一次性同步修正 `test-print.html` 与 `PreviewContainer.tsx`：删除静态 SVG 的 2px 黑色 `<rect>`，两侧字格统一为 `1px #64748b` 独立外框，内部辅助线统一为 `#cbd5e1`、0.8、`6 6`；四线三格统一为 7mm 且四条线位于顶部/1/3/2/3/底部，消除田字格上方空隙。拼音及字格 Grid 统一加入 1.2mm 横向间距，行距统一为 0.25mm；静态格宽/分页公式同步计入列间距，并为少字尾页补齐空白行。`npx tsc --noEmit` 0 报错，内嵌脚本 `embedded-js-ok 1`，目标差异空白检查通过；等待人类刷新静态模板视觉验收。
 - 2026-07-11: 已按架构师指定代码结构强制覆写 `PreviewContainer`：米字格 SVG 移除自带外框，仅保留 `0.8` 宽度的淡灰十字与对角虚线；`.hanzi-cell` 锁定独立 `1.5px #1e293b` 外框、2px 圆角和 border-box。拼音轨改为 7mm，四线精确定位在 1.0/2.7/4.4/6.1mm，文字改为 10px；拼音、真实字格和空白补齐网格统一为 `gap-x-[1.2mm]`。分页常量同步后每页为 12 行，无字、少字及最后一页均通过 `BlankPracticeRow` 补满。`npx tsc --noEmit` 0 报错，目标差异空白检查通过；等待人类刷新验收。
 - 2026-07-11: 已依据产品经理视觉评审完成 `PreviewContainer` 出版级像素整容：`.hanzi-cell` 改为独立 `1.5px #1e293b` 外框，字格网格与拼音轨统一使用 `1.5mm` 列间距，彻底消除相邻边框叠加；米字格 SVG 删除自带外框，仅保留 `#cbd5e1` 内部辅助线并采用 `6 6` 稀疏虚线。拼音轨收紧至 6.5mm、四线统一为 `#e2e8f0`，行距降至 0.25mm；分页公式计入列间距后得到 14.125mm 方格与每页 13 行。真实练习行、尾页补齐行和未选字空白行使用同一规范。`npx tsc --noEmit` 0 报错，目标差异空白检查通过；等待人类刷新验收。

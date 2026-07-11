@@ -1,4 +1,7 @@
 # 动态上下文 (activeContext.md)
+## 当前所处阶段（2026-07-11 Vercel 404 部署配置修复）
+已完成 Vercel 404 路由重定向与输出目录规范化修复。根级 `index.html` 正确挂载 `#root` 并加载 `/src/main.ts`；`package.json` 的 `build` 脚本执行 `tsc --noEmit && vite build`，Vite 默认将完整静态产物输出到根级 `dist`。`vercel.json` 已无条件覆写为指定的 `cleanUrls: true`、`trailingSlash: false` 与全路径 SPA fallback。运行 `npm run build` 成功，生成 `dist/index.html` 与 `dist/assets/index-CBKpSJHp.js`；配置 JSON 断言、产物断言与 `git diff --check` 均通过。当前部署文件已具备通过 Git 推送重新触发 Vercel Production Deployment 的条件。
+
 ## 当前所处阶段（2026-07-11 双渲染面视觉一致性修复）
 已完成静态模板 `test-print.html` 与 React `src/components/PreviewContainer.tsx` 的一次性同步修正：两侧均移除 SVG 自带外框，米字格只保留 `#cbd5e1`、`0.8`、`6 6` 的内部辅助线；字格外框统一收敛为 `1px solid #64748b`、无圆角、`border-box`，彻底消除双重粗黑边框。
 
