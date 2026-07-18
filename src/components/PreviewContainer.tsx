@@ -68,12 +68,13 @@ const previewPrintStyles = `
     text-align: center;
   }
 
-  .mi-grid-bg {
-    /* 彻底移除原 SVG 中的外层实线矩形，仅保留内部极细的十字与对角斜线 */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100 M0 0L100 100 M100 0L0 100' stroke='%23cbd5e1' stroke-width='0.8' stroke-dasharray='6 8' fill='none'/%3E%3C/svg%3E");
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
+  .mi-grid-guide {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
   .hanzi-cell {
@@ -205,16 +206,30 @@ const getPracticeCells = (character: CharacterMeta, strokeCount: number, showStr
   });
 };
 
-const getGridBackgroundStyle = (config: WorkbookConfig): { backgroundImage?: string } => {
+const GridGuide = ({ config }: { config: WorkbookConfig }) => {
   if (!config.showGrid) {
-    return {};
+    return null;
   }
 
-  const color = encodeURIComponent(config.gridLineColor || '#cbd5e1');
   const diagonals = config.gridType === 'MI' ? ' M0 0L100 100 M100 0L0 100' : '';
-  const svg = `%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0V100 M0 50H100${diagonals}' stroke='${color}' stroke-width='${config.gridLineWidth}' stroke-dasharray='6 8' fill='none'/%3E%3C/svg%3E`;
 
-  return { backgroundImage: `url("data:image/svg+xml,${svg}")` };
+  return (
+    <svg
+      className="mi-grid-guide"
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d={`M50 0V100 M0 50H100${diagonals}`}
+        stroke={config.gridLineColor || '#cbd5e1'}
+        strokeWidth={config.gridLineWidth}
+        strokeDasharray="6 8"
+        fill="none"
+      />
+    </svg>
+  );
 };
 
 const PrintActionBar = ({ isPrintReady, statusText }: { isPrintReady: boolean; statusText: string }) => {
@@ -367,12 +382,9 @@ const HanziWriterTrace = ({ cell, config }: { cell: PracticeCell; config: Workbo
 
 const PracticeCellView = ({ cell, config }: { cell: PracticeCell; config: WorkbookConfig }) => (
   <div
-    className={[
-      'hanzi-cell relative flex aspect-square min-w-0 items-center justify-center overflow-hidden bg-white',
-      config.showGrid ? 'mi-grid-bg' : '',
-    ].join(' ')}
-    style={getGridBackgroundStyle(config)}
+    className="hanzi-cell relative flex aspect-square min-w-0 items-center justify-center overflow-hidden bg-white"
   >
+    <GridGuide config={config} />
     <HanziWriterTrace cell={cell} config={config} />
   </div>
 );
@@ -398,13 +410,11 @@ const BlankPracticeRow = ({
             {Array.from({ length: practiceCellsPerRow }, (_, cellIndex) => (
               <div
                 key={`${rowId}-${gridRowIndex}-cell-${cellIndex}`}
-                className={[
-                  'hanzi-cell relative aspect-square min-w-0 overflow-hidden bg-white',
-                  config.showGrid ? 'mi-grid-bg' : '',
-                ].join(' ')}
-                style={getGridBackgroundStyle(config)}
+                className="hanzi-cell relative aspect-square min-w-0 overflow-hidden bg-white"
                 aria-hidden="true"
-              />
+              >
+                <GridGuide config={config} />
+              </div>
             ))}
           </div>
         </div>

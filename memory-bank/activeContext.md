@@ -1,5 +1,8 @@
 # 动态上下文 (activeContext.md)
 
+## 📌 当前任务（2026-07-18 打印预览网格虚线修复完成）
+已修复浏览器打印预览中米字格/田字格内部虚线消失的问题。根因是辅助线由 CSS `background-image` 承载，打印预览在未开启“背景图形”时会省略该层；`src/components/PreviewContainer.tsx` 与根目录 `test-print.html` 现已同步改为真实内联 SVG 打印内容，继续严格响应 `gridType`、`gridLineWidth`、`gridLineColor` 和 `showGrid`。`npm run build`、静态沙箱内嵌脚本语法、黑名单审计、旧背景图残留断言与 `git diff --check` 均通过。应用内 Browser 因当前安全策略明确拒绝 `http://127.0.0.1:5173`，未绕过该限制执行打印预览截图。
+
 ## 📌 当前任务（2026-07-18 教材封面网格与课文级联重构已完成）
 侧栏已由年级/学期/单元文本筛选升级为 12 册教材封面抽屉、课文标题级联与课文专属生字选择。`TextbookFilter` 已收敛为 `grade + semester + lesson`，`CharacterMeta` 保留教材课文标题；默认状态为一年级上册首课《天地人》，切换封面会从该册 `characterPool` 的不重复课文序列中自动选择第一课并清空旧选字。封面矩阵严格锁定 180px 高度并滚动，教材卡可折叠，激活/弱化态、课文 Select、全选/清空与无字库空态均已落地；固定映射缺失的 `pep-y5-s1.png` 已由原 JPG 补齐为真实 PNG。
 
