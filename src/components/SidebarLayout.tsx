@@ -2,10 +2,24 @@ import { useState } from 'react';
 import { useAppStore } from '../store/useAppStore.js';
 import type { AppState, CharacterMeta, GradeLevel, SemesterType } from '../types/index.js';
 
-const gradeOptions: GradeLevel[] = ['1', '2', '3', '4', '5', '6'];
-const semesterOptions: Array<{ label: string; value: SemesterType }> = [
-  { label: '上册', value: 'UP' },
-  { label: '下册', value: 'DOWN' },
+const TEXTBOOK_COVERS: Array<{
+  grade: GradeLevel;
+  semester: SemesterType;
+  title: string;
+  coverUrl: string;
+}> = [
+  { grade: '1', semester: 'UP', title: '一年级上册', coverUrl: '/assets/covers/pep-y1-s1.png' },
+  { grade: '1', semester: 'DOWN', title: '一年级下册', coverUrl: '/assets/covers/pep-y1-s2.png' },
+  { grade: '2', semester: 'UP', title: '二年级上册', coverUrl: '/assets/covers/pep-y2-s1.png' },
+  { grade: '2', semester: 'DOWN', title: '二年级下册', coverUrl: '/assets/covers/pep-y2-s2.png' },
+  { grade: '3', semester: 'UP', title: '三年级上册', coverUrl: '/assets/covers/pep-y3-s1.png' },
+  { grade: '3', semester: 'DOWN', title: '三年级下册', coverUrl: '/assets/covers/pep-y3-s2.png' },
+  { grade: '4', semester: 'UP', title: '四年级上册', coverUrl: '/assets/covers/pep-y4-s1.png' },
+  { grade: '4', semester: 'DOWN', title: '四年级下册', coverUrl: '/assets/covers/pep-y4-s2.png' },
+  { grade: '5', semester: 'UP', title: '五年级上册', coverUrl: '/assets/covers/pep-y5-s1.png' },
+  { grade: '5', semester: 'DOWN', title: '五年级下册', coverUrl: '/assets/covers/pep-y5-s2.png' },
+  { grade: '6', semester: 'UP', title: '六年级上册', coverUrl: '/assets/covers/pep-y6-s1.png' },
+  { grade: '6', semester: 'DOWN', title: '六年级下册', coverUrl: '/assets/covers/pep-y6-s2.png' },
 ];
 
 const selectClassName =
@@ -22,31 +36,26 @@ const getFilteredCharacters = (
 ): CharacterMeta[] =>
   characterPool.filter((character) => {
     const matchesBaseFilter =
-      character.version === filter.version &&
       character.grade === filter.grade &&
-      character.semester === filter.semester;
+      character.semester === filter.semester &&
+      character.lesson === filter.lesson;
 
-    if (!matchesBaseFilter) {
-      return false;
-    }
-
-    return filter.selectedUnit === null || character.unit === filter.selectedUnit;
+    return matchesBaseFilter;
   });
 
-const getUnitOptions = (
+const getLessonOptions = (
   characterPool: CharacterMeta[],
   filter: AppState['filter'],
-): number[] => {
-  const units = characterPool
+): string[] => {
+  const lessons = characterPool
     .filter(
       (character) =>
-        character.version === filter.version &&
         character.grade === filter.grade &&
         character.semester === filter.semester,
     )
-    .map((character) => character.unit);
+    .map((character) => character.lesson);
 
-  return Array.from(new Set(units)).sort((first, second) => first - second);
+  return Array.from(new Set(lessons));
 };
 
 type SelectChangeEvent = {
@@ -56,70 +65,101 @@ type SelectChangeEvent = {
 };
 
 const TextbookSelector = () => {
+  const [isTextbookOpen, setIsTextbookOpen] = useState(true);
   const { characterPool, filter, setFilter } = useAppStore((state) => ({
     characterPool: state.characterPool,
     filter: state.filter,
     setFilter: state.setFilter,
   }));
-  const unitOptions = getUnitOptions(characterPool, filter);
+  const lessonOptions = getLessonOptions(characterPool, filter);
+  const activeTextbook = TEXTBOOK_COVERS.find(
+    (textbook) => textbook.grade === filter.grade && textbook.semester === filter.semester,
+  );
 
-  const handleGradeChange = (event: SelectChangeEvent): void => {
-    setFilter({ grade: event.target.value as GradeLevel });
-  };
-
-  const handleSemesterChange = (event: SelectChangeEvent): void => {
-    setFilter({ semester: event.target.value as SemesterType });
-  };
-
-  const handleUnitChange = (event: SelectChangeEvent): void => {
-    const selectedUnit = event.target.value === 'ALL' ? null : Number(event.target.value);
-
-    setFilter({ selectedUnit });
+  const handleLessonChange = (event: SelectChangeEvent): void => {
+    setFilter({ lesson: event.target.value });
   };
 
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="text-sm font-semibold text-slate-950">教材筛选</h2>
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <button
+        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition hover:bg-slate-50"
+        type="button"
+        aria-expanded={isTextbookOpen}
+        aria-controls="textbook-cover-drawer"
+        onClick={() => setIsTextbookOpen((isOpen) => !isOpen)}
+      >
+        <span className="min-w-0">
+          <span className="block text-xs font-medium text-slate-500">已选教材</span>
+          <span className="block truncate text-sm font-semibold text-slate-950">
+            {activeTextbook?.title ?? '未选择'} 📖
+          </span>
+        </span>
+        <span className="shrink-0 text-xs font-semibold text-blue-600">
+          {isTextbookOpen ? '收起' : '切换'}
+        </span>
+      </button>
+
+      <div
+        id="textbook-cover-drawer"
+        className={[
+          'grid transition-[grid-template-rows,opacity] duration-300 ease-out',
+          isTextbookOpen ? 'grid-rows-[1fr] opacity-100' : 'pointer-events-none grid-rows-[0fr] opacity-0',
+        ].join(' ')}
+      >
+        <div className="overflow-hidden">
+          <div className="space-y-3 border-t border-slate-100 p-3">
+            <div className="grid grid-cols-3 gap-2 max-h-[180px] overflow-y-auto pr-1">
+              {TEXTBOOK_COVERS.map((textbook) => {
+                const isActive = textbook.grade === filter.grade && textbook.semester === filter.semester;
+                const shortSemester = textbook.semester === 'UP' ? '上' : '下';
+
+                return (
+                  <button
+                    key={`${textbook.grade}-${textbook.semester}`}
+                    className={[
+                      'rounded-md border bg-white px-1 py-1.5',
+                      isActive
+                        ? 'ring-2 ring-blue-500 shadow-md scale-[1.05] border-transparent transition-all'
+                        : 'border-slate-200 opacity-60 transition-all hover:opacity-100',
+                    ].join(' ')}
+                    type="button"
+                    aria-label={`选择${textbook.title}`}
+                    aria-pressed={isActive}
+                    onClick={() => setFilter({ grade: textbook.grade, semester: textbook.semester })}
+                  >
+                    <img
+                      className="aspect-[3/4] h-16 mx-auto rounded border object-cover border-slate-200"
+                      src={textbook.coverUrl}
+                      alt={`${textbook.title}教材封面`}
+                    />
+                    <span className="mt-1 block text-[10px] font-semibold leading-none text-slate-600">
+                      {textbook.grade}{shortSemester}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <label className="block space-y-2">
+              <span className="text-xs font-medium text-slate-500">课文</span>
+              <select
+                className={selectClassName}
+                value={filter.lesson}
+                disabled={lessonOptions.length === 0}
+                onChange={handleLessonChange}
+              >
+                {lessonOptions.length === 0 ? <option value="">该册字库尚未录入</option> : null}
+                {lessonOptions.map((lesson) => (
+                  <option key={lesson} value={lesson}>
+                    《{lesson}》
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
       </div>
-
-      <label className="block space-y-2">
-        <span className="text-xs font-medium text-slate-500">年级</span>
-        <select className={selectClassName} value={filter.grade} onChange={handleGradeChange}>
-          {gradeOptions.map((grade) => (
-            <option key={grade} value={grade}>
-              {grade}年级
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="block space-y-2">
-        <span className="text-xs font-medium text-slate-500">学期</span>
-        <select className={selectClassName} value={filter.semester} onChange={handleSemesterChange}>
-          {semesterOptions.map((semester) => (
-            <option key={semester.value} value={semester.value}>
-              {semester.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="block space-y-2">
-        <span className="text-xs font-medium text-slate-500">单元</span>
-        <select
-          className={selectClassName}
-          value={filter.selectedUnit === null ? 'ALL' : String(filter.selectedUnit)}
-          onChange={handleUnitChange}
-        >
-          <option value="ALL">全册</option>
-          {unitOptions.map((unit) => (
-            <option key={unit} value={unit}>
-              第{unit}单元
-            </option>
-          ))}
-        </select>
-      </label>
     </section>
   );
 };
@@ -148,7 +188,7 @@ const CharacterPicker = () => {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-slate-950">生字选择</h2>
+        <h2 className="text-sm font-semibold text-slate-950">课文生字</h2>
         <span className="text-xs font-medium text-slate-500">{visibleCharacters.length} 字</span>
       </div>
 
@@ -195,7 +235,7 @@ const CharacterPicker = () => {
 
       {visibleCharacters.length === 0 ? (
         <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center text-sm text-slate-500">
-          当前筛选暂无生字
+          当前教材课文暂无生字
         </div>
       ) : null}
     </section>

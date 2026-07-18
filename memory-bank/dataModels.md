@@ -14,6 +14,15 @@ export type GradeLevel = '1' | '2' | '3' | '4' | '5' | '6';
 export type SemesterType = 'UP' | 'DOWN'; // UP = 上册, DOWN = 下册
 
 /**
+ * @description 教材封面到课文的级联筛选契约
+ */
+export interface TextbookFilter {
+  grade: GradeLevel;
+  semester: SemesterType;
+  lesson: string;
+}
+
+/**
  * @description 与运行时状态解耦的教材静态字库资产契约
  */
 export interface TextbookCharacter {
@@ -39,6 +48,7 @@ export interface CharacterMeta {
   grade: GradeLevel;
   semester: SemesterType;
   unit: number;          // 单元序列号 (1, 2, 3...)
+  lesson: string;        // 当前汉字所属课文标题
 }
 
 /**
@@ -60,12 +70,7 @@ export interface WorkbookConfig {
  */
 export interface AppState {
   // 联动筛选状态
-  filter: {
-    version: TextbookVersion;
-    grade: GradeLevel;
-    semester: SemesterType;
-    selectedUnit: number | null; // null 表示全册
-  };
+  filter: TextbookFilter;
   // 字库数据源缓存
   characterPool: CharacterMeta[];
   // 用户勾选的汉字ID集合

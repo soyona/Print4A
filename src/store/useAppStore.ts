@@ -30,6 +30,7 @@ const toCurrentCharacterMeta = (character: TextbookCharacter): CharacterMeta => 
   grade: character.grade,
   semester: character.semester,
   unit: unitNumberByLabel[character.unit],
+  lesson: character.lesson,
 });
 
 const characterPool: CharacterMeta[] = [
@@ -38,6 +39,18 @@ const characterPool: CharacterMeta[] = [
   ...pepY2S1Characters.map(toCurrentCharacterMeta),
   ...pepY2S2Characters.map(toCurrentCharacterMeta),
 ];
+
+const getFirstLesson = (
+  pool: CharacterMeta[],
+  grade: AppState['filter']['grade'],
+  semester: AppState['filter']['semester'],
+): string => {
+  const lessons = pool
+    .filter((character) => character.grade === grade && character.semester === semester)
+    .map((character) => character.lesson);
+
+  return Array.from(new Set(lessons))[0] ?? '';
+};
 
 let state: AppState;
 const listeners = new Set<Listener>();
@@ -53,10 +66,9 @@ const setState = (updater: (current: AppState) => AppState): void => {
 
 const createInitialState = (): AppState => ({
   filter: {
-    version: 'PEP',
-    grade: '2',
+    grade: '1',
     semester: 'UP',
-    selectedUnit: null,
+    lesson: getFirstLesson(characterPool, '1', 'UP'),
   },
   characterPool,
   selectedCharIds: new Set<string>(),
@@ -74,11 +86,16 @@ const createInitialState = (): AppState => ({
     setState((current) => {
       const gradeChanged = updater.grade !== undefined && updater.grade !== current.filter.grade;
       const semesterChanged = updater.semester !== undefined && updater.semester !== current.filter.semester;
-      const shouldResetUnit = (gradeChanged || semesterChanged) && updater.selectedUnit === undefined;
+      const nextGrade = updater.grade ?? current.filter.grade;
+      const nextSemester = updater.semester ?? current.filter.semester;
+      const nextLesson =
+        gradeChanged || semesterChanged
+          ? getFirstLesson(current.characterPool, nextGrade, nextSemester)
+          : updater.lesson ?? current.filter.lesson;
       const nextFilter: AppState['filter'] = {
-        ...current.filter,
-        ...updater,
-        selectedUnit: shouldResetUnit ? null : updater.selectedUnit ?? current.filter.selectedUnit,
+        grade: nextGrade,
+        semester: nextSemester,
+        lesson: nextLesson,
       };
 
       return {

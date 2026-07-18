@@ -23,9 +23,10 @@ AppRoot
 ### 1. `TextbookSelector`
 * **输入 (Props)**: 无（直连 Zustand 局部订阅）。
 * **输出 (Events)**:
-  * `onFilterChange(filter: AppState['filter'])`: 联动条件变更，触发 Zustand 状态更新，重置选字集。
+  * `onFilterChange(filter: TextbookFilter)`: 教材封面或课文变更，触发状态更新并重置选字集。
 * **副作用 (Side-Effects)**:
-  * 当 `grade` 或 `semester` 变更时，内部需计算并更新下游 `unit` 下拉列表的有效最大范围长度。
+  * 当 `grade` 或 `semester` 变更时，状态机从该册 `characterPool` 中提取首个不重复课文标题并更新 `lesson`。
+  * 教材封面抽屉默认展开，封面矩阵锁定 180px 最大高度并可滚动，选择后可折叠释放侧栏空间。
 
 ### 2. `CharacterPicker`
 * **输入 (Props)**:
