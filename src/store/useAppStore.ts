@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from 'react';
 import { pepY2S1Characters } from '../data/textbooks/pep-y2-s1.js';
 import type { AppState, CharacterMeta, WorkbookConfig } from '../types/index.js';
-import type { TextbookCharacter } from '../types/textbook.js';
+import type { LegacyTextbookCharacter } from '../types/textbook.js';
 
 type Listener = () => void;
 type StoreSelector<T> = (state: AppState) => T;
 
-const toCharacterMeta = (character: TextbookCharacter): CharacterMeta => ({
+const toCharacterMeta = (character: LegacyTextbookCharacter): CharacterMeta => ({
   id: character.id,
   char: character.char,
   pinyin: character.pinyin,

@@ -20,6 +20,19 @@ export interface TextbookCharacter {
   id: string;
   char: string;
   pinyin: string;
+  grade: '1' | '2' | '3' | '4' | '5' | '6';
+  semester: 'UP' | 'DOWN';
+  unit: string;
+  lesson: string;
+}
+
+/**
+ * @description 仅供尚未重新生成的二年级试验资产过渡使用
+ */
+export interface LegacyTextbookCharacter {
+  id: string;
+  char: string;
+  pinyin: string;
   textbook: 'PEP';
   grade: '1' | '2' | '3' | '4' | '5' | '6';
   semester: '1' | '2';

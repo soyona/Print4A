@@ -1,4 +1,4 @@
-import type { TextbookCharacter } from '../../types/textbook.js';
+import type { LegacyTextbookCharacter } from '../../types/textbook.js';
 
 export const pepY2S1Characters = [
   { id: 'pep-y2-s1-u1-l1-liang', char: '两', pinyin: 'liǎng', textbook: 'PEP', grade: '2', semester: '1', unit: 1, lessonName: '小蝌蚪找妈妈' },
@@ -27,4 +27,4 @@ export const pepY2S1Characters = [
   { id: 'pep-y2-s1-u2-l2-song', char: '松', pinyin: 'sōng', textbook: 'PEP', grade: '2', semester: '1', unit: 2, lessonName: '树之歌' },
   { id: 'pep-y2-s1-u2-l2-bai', char: '柏', pinyin: 'bǎi', textbook: 'PEP', grade: '2', semester: '1', unit: 2, lessonName: '树之歌' },
   { id: 'pep-y2-s1-u2-l2-mian', char: '棉', pinyin: 'mián', textbook: 'PEP', grade: '2', semester: '1', unit: 2, lessonName: '树之歌' },
-] satisfies TextbookCharacter[];
+] satisfies LegacyTextbookCharacter[];
