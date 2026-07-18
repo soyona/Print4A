@@ -1,24 +1,43 @@
 import { useSyncExternalStore } from 'react';
+import { pepY1S1Characters } from '../data/textbooks/pep-y1-s1.js';
+import { pepY1S2Characters } from '../data/textbooks/pep-y1-s2.js';
 import { pepY2S1Characters } from '../data/textbooks/pep-y2-s1.js';
+import { pepY2S2Characters } from '../data/textbooks/pep-y2-s2.js';
 import type { AppState, CharacterMeta, WorkbookConfig } from '../types/index.js';
-import type { LegacyTextbookCharacter } from '../types/textbook.js';
+import type { TextbookCharacter } from '../types/textbook.js';
 
 type Listener = () => void;
 type StoreSelector<T> = (state: AppState) => T;
 
-const toCharacterMeta = (character: LegacyTextbookCharacter): CharacterMeta => ({
+const unitNumberByLabel: Record<TextbookCharacter['unit'], number> = {
+  第一单元: 1,
+  第二单元: 2,
+  第三单元: 3,
+  第四单元: 4,
+  第五单元: 5,
+  第六单元: 6,
+  第七单元: 7,
+  第八单元: 8,
+};
+
+const toCurrentCharacterMeta = (character: TextbookCharacter): CharacterMeta => ({
   id: character.id,
   char: character.char,
   pinyin: character.pinyin,
   strokes: [],
   components: [],
-  version: character.textbook,
+  version: 'PEP',
   grade: character.grade,
-  semester: character.semester === '1' ? 'UP' : 'DOWN',
-  unit: character.unit,
+  semester: character.semester,
+  unit: unitNumberByLabel[character.unit],
 });
 
-const characterPool: CharacterMeta[] = pepY2S1Characters.map(toCharacterMeta);
+const characterPool: CharacterMeta[] = [
+  ...pepY1S1Characters.map(toCurrentCharacterMeta),
+  ...pepY1S2Characters.map(toCurrentCharacterMeta),
+  ...pepY2S1Characters.map(toCurrentCharacterMeta),
+  ...pepY2S2Characters.map(toCurrentCharacterMeta),
+];
 
 let state: AppState;
 const listeners = new Set<Listener>();

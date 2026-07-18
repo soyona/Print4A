@@ -27,20 +27,6 @@ export interface TextbookCharacter {
 }
 
 /**
- * @description 仅供尚未重新生成的二年级试验资产过渡使用
- */
-export interface LegacyTextbookCharacter {
-  id: string;
-  char: string;
-  pinyin: string;
-  textbook: 'PEP';
-  grade: '1' | '2' | '3' | '4' | '5' | '6';
-  semester: '1' | '2';
-  unit: number;
-  lessonName: string;
-}
-
-/**
  * @description 原始教材字库元数据契约
  */
 export interface CharacterMeta {
